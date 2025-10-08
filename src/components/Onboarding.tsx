@@ -3,6 +3,10 @@ import { X, User, Users } from 'lucide-react';
 import PhoneStep from './onboarding/PhoneStep';
 import OTPStep from './onboarding/OTPStep';
 import ProfileStep from './onboarding/ProfileStep';
+import FamilyProfileStep from './onboarding/FamilyProfileStep';
+import LovedOneProfileStep from './onboarding/LovedOneProfileStep';
+import LovedOnePhoneStep from './onboarding/LovedOnePhoneStep';
+import LovedOneOTPStep from './onboarding/LovedOneOTPStep';
 import CallTimeStep from './onboarding/CallTimeStep';
 import MedicationStep from './onboarding/MedicationStep';
 import InterestsStep from './onboarding/InterestsStep';
@@ -23,6 +27,16 @@ export interface OnboardingData {
   gender: string;
   language: string;
   maritalStatus: string;
+  relationship?: string;
+  lovedOneFirstName?: string;
+  lovedOneLastName?: string;
+  lovedOneDateOfBirth?: string;
+  lovedOneGender?: string;
+  lovedOneLanguage?: string;
+  lovedOneMaritalStatus?: string;
+  lovedOnePhoneNumber?: string;
+  lovedOneCountryCode?: string;
+  lovedOneOtp?: string;
   callTime: string;
   customTimeRange?: { start: string; end: string };
   medications: Array<{
@@ -47,6 +61,16 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
     gender: '',
     language: 'English',
     maritalStatus: '',
+    relationship: '',
+    lovedOneFirstName: '',
+    lovedOneLastName: '',
+    lovedOneDateOfBirth: '',
+    lovedOneGender: '',
+    lovedOneLanguage: 'English',
+    lovedOneMaritalStatus: '',
+    lovedOnePhoneNumber: '',
+    lovedOneCountryCode: '+1',
+    lovedOneOtp: '',
     callTime: '',
     medications: [],
     interests: [],
@@ -64,10 +88,12 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
     setCurrentStep(prev => prev - 1);
   };
 
-  const totalSteps = 8;
+  const totalSteps = data.registrationType === 'loved-one' ? 9 : 8;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const renderStep = () => {
+    const isLovedOne = data.registrationType === 'loved-one';
+
     switch (currentStep) {
       case 0:
         return (
@@ -121,15 +147,45 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
       case 2:
         return <OTPStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 3:
+        if (isLovedOne) {
+          return <FamilyProfileStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
         return <ProfileStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 4:
+        if (isLovedOne) {
+          return <LovedOneProfileStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
         return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 5:
+        if (isLovedOne) {
+          return <LovedOnePhoneStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
         return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 6:
+        if (isLovedOne) {
+          return <LovedOneOTPStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
         return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 7:
+        if (isLovedOne) {
+          return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
         return <ThankYouStep data={data} onClose={onClose} />;
+      case 8:
+        if (isLovedOne) {
+          return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
+        return null;
+      case 9:
+        if (isLovedOne) {
+          return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+        }
+        return null;
+      case 10:
+        if (isLovedOne) {
+          return <ThankYouStep data={data} onClose={onClose} />;
+        }
+        return null;
       default:
         return null;
     }
@@ -148,7 +204,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
         {currentStep > 0 && (
           <div className="sticky top-0 bg-[#F4F2EE] pt-8 pb-4 px-8 z-10">
             <div className="flex gap-2">
-              {Array.from({ length: totalSteps - 1 }).map((_, index) => (
+              {Array.from({ length: totalSteps }).map((_, index) => (
                 <div
                   key={index}
                   className="h-2 flex-1 rounded-full overflow-hidden bg-gray-300"

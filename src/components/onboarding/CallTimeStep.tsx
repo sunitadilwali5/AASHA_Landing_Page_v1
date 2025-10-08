@@ -40,10 +40,12 @@ const CallTimeStep: React.FC<CallTimeStepProps> = ({ data, updateData, onNext, o
     }
   };
 
+  const isLovedOne = data.registrationType === 'loved-one';
+
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
-        When should Aasha call you?
+        {isLovedOne ? 'When should Aasha call your loved one?' : 'When should Aasha call you?'}
       </h2>
 
       <div className="grid md:grid-cols-3 gap-6 mb-6">
