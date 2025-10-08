@@ -162,7 +162,13 @@ function App() {
                 FAQ
               </button>
             </div>
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center space-x-4">
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="text-gray-700 hover:text-[#F35E4A] transition-colors font-semibold"
+              >
+                Login
+              </button>
               <button
                 onClick={() => setShowOnboarding(true)}
                 className="bg-[#F35E4A] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md"
@@ -204,11 +210,17 @@ function App() {
                 >
                   Reviews
                 </button>
-                <button 
+                <button
                   onClick={() => scrollToSection('faq')}
                   className="block w-full text-left text-gray-700 hover:text-[#F35E4A] transition-colors py-2"
                 >
                   FAQ
+                </button>
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="w-full text-gray-700 hover:text-[#F35E4A] transition-colors font-semibold py-2 text-left mt-2"
+                >
+                  Login
                 </button>
                 <button
                   onClick={() => setShowOnboarding(true)}
