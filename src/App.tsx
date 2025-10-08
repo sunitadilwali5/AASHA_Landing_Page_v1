@@ -30,10 +30,12 @@ import { supabase } from './lib/supabase';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import FamilyDashboard from './components/FamilyDashboard';
+import LoginModal from './components/LoginModal';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [showLogin, setShowLogin] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isFamilyMember, setIsFamilyMember] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
@@ -164,7 +166,7 @@ function App() {
             </div>
             <div className="hidden md:flex items-center space-x-4">
               <button
-                onClick={() => setShowOnboarding(true)}
+                onClick={() => setShowLogin(true)}
                 className="text-gray-700 hover:text-[#F35E4A] transition-colors font-semibold"
               >
                 Login
@@ -217,7 +219,10 @@ function App() {
                   FAQ
                 </button>
                 <button
-                  onClick={() => setShowOnboarding(true)}
+                  onClick={() => {
+                    setShowLogin(true);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className="w-full text-gray-700 hover:text-[#F35E4A] transition-colors font-semibold py-2 text-left mt-2"
                 >
                   Login
@@ -955,6 +960,10 @@ function App() {
 
       {showOnboarding && (
         <Onboarding onClose={() => setShowOnboarding(false)} />
+      )}
+
+      {showLogin && (
+        <LoginModal onClose={() => setShowLogin(false)} />
       )}
     </div>
   );
