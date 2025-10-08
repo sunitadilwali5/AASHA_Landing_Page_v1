@@ -41,6 +41,9 @@ async function saveMyselfRegistration(data: OnboardingData) {
   const email = `${data.phoneNumber}@aasha-temp.com`;
   const password = generateTemporaryPassword();
 
+  let userId: string;
+  let isExistingAuth = false;
+
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
@@ -54,24 +57,50 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
-    if (signUpError.message.includes('already registered')) {
-      throw new Error('User already registered');
+    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+      isExistingAuth = true;
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: password,
+      });
+
+      if (signInError) {
+        console.error('Could not sign in with existing account:', signInError);
+        throw new Error('This phone number has an incomplete registration. Please contact support.');
+      }
+
+      if (!signInData.user) {
+        throw new Error('Failed to retrieve existing user');
+      }
+
+      userId = signInData.user.id;
+
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        throw new Error('User already registered');
+      }
+    } else {
+      throw new Error(`Failed to create account: ${signUpError.message}`);
     }
-    throw new Error(`Failed to create account: ${signUpError.message}`);
-  }
-  if (!authData.user) throw new Error('User creation failed');
+  } else {
+    if (!authData.user) throw new Error('User creation failed');
+    userId = authData.user.id;
 
-  const userId = authData.user.id;
+    if (!authData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-  if (!authData.session) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      console.error('Sign in error after signup:', signInError);
-      throw new Error(`Failed to authenticate: ${signInError.message}`);
+      if (signInError) {
+        console.error('Sign in error after signup:', signInError);
+        throw new Error(`Failed to authenticate: ${signInError.message}`);
+      }
     }
   }
 
@@ -151,6 +180,9 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   const email = `${data.phoneNumber}@aasha-temp.com`;
   const password = generateTemporaryPassword();
 
+  let caregiverId: string;
+  let isExistingAuth = false;
+
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
@@ -164,24 +196,50 @@ async function saveLovedOneRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
-    if (signUpError.message.includes('already registered')) {
-      throw new Error('User already registered');
+    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+      isExistingAuth = true;
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: password,
+      });
+
+      if (signInError) {
+        console.error('Could not sign in with existing account:', signInError);
+        throw new Error('This phone number has an incomplete registration. Please contact support.');
+      }
+
+      if (!signInData.user) {
+        throw new Error('Failed to retrieve existing user');
+      }
+
+      caregiverId = signInData.user.id;
+
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', caregiverId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        throw new Error('User already registered');
+      }
+    } else {
+      throw new Error(`Failed to create account: ${signUpError.message}`);
     }
-    throw new Error(`Failed to create account: ${signUpError.message}`);
-  }
-  if (!authData.user) throw new Error('User creation failed');
+  } else {
+    if (!authData.user) throw new Error('User creation failed');
+    caregiverId = authData.user.id;
 
-  const caregiverId = authData.user.id;
+    if (!authData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-  if (!authData.session) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      console.error('Sign in error after signup:', signInError);
-      throw new Error(`Failed to authenticate: ${signInError.message}`);
+      if (signInError) {
+        console.error('Sign in error after signup:', signInError);
+        throw new Error(`Failed to authenticate: ${signInError.message}`);
+      }
     }
   }
 

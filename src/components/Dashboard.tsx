@@ -125,12 +125,20 @@ const Dashboard: React.FC = () => {
         <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-md">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h2>
           <p className="text-gray-600 mb-6">We couldn't find your profile. Please complete the registration process.</p>
-          <button
-            onClick={handleLogout}
-            className="bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
-          >
-            Back to Home
-          </button>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
+            >
+              Retry
+            </button>
+            <button
+              onClick={handleLogout}
+              className="border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
     );
