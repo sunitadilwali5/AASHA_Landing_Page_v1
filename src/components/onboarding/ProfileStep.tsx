@@ -98,8 +98,6 @@ const ProfileStep: React.FC<ProfileStepProps> = ({ data, updateData, onNext, onB
           >
             <option value="English">English</option>
             <option value="Hindi">Hindi</option>
-            <option value="Spanish">Spanish</option>
-            <option value="Mandarin">Mandarin</option>
           </select>
         </div>
 

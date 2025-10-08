@@ -12,6 +12,23 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
   const [phoneNumber, setPhoneNumber] = useState(data.lovedOnePhoneNumber || '');
   const [countryCode, setCountryCode] = useState(data.lovedOneCountryCode || '+1');
   const [useSameNumber, setUseSameNumber] = useState(false);
+  const [error, setError] = useState('');
+
+  const validatePhoneNumber = (phone: string, code: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (code === '+1') {
+      return digitsOnly.length === 10;
+    } else if (code === '+91') {
+      return digitsOnly.length === 10;
+    }
+    return false;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setPhoneNumber(digitsOnly);
+    setError('');
+  };
 
   const handleSubmit = () => {
     if (useSameNumber) {
@@ -20,7 +37,19 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
         lovedOneCountryCode: data.countryCode,
       });
       onNext();
-    } else if (phoneNumber) {
+    } else {
+      if (!phoneNumber) {
+        setError('Phone number is required');
+        return;
+      }
+      if (!validatePhoneNumber(phoneNumber, countryCode)) {
+        if (countryCode === '+1') {
+          setError('US phone number must be 10 digits');
+        } else if (countryCode === '+91') {
+          setError('Indian phone number must be 10 digits');
+        }
+        return;
+      }
       updateData({
         lovedOnePhoneNumber: phoneNumber,
         lovedOneCountryCode: countryCode,
@@ -42,22 +71,26 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
         <div className="flex gap-4">
           <select
             value={countryCode}
-            onChange={(e) => setCountryCode(e.target.value)}
+            onChange={(e) => {
+              setCountryCode(e.target.value);
+              setError('');
+            }}
             disabled={useSameNumber}
             className="px-4 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] bg-white w-32 disabled:bg-gray-100 disabled:text-gray-500"
           >
-            <option value="+1">+1</option>
-            <option value="+91">+91</option>
-            <option value="+44">+44</option>
-            <option value="+61">+61</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+91">🇮🇳 +91</option>
           </select>
           <input
             type="tel"
             value={useSameNumber ? data.phoneNumber : phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="Enter phone number"
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder={countryCode === '+1' ? '2025551234' : '9876543210'}
+            maxLength={10}
             disabled={useSameNumber}
-            className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] disabled:bg-gray-100 disabled:text-gray-500"
+            className={`flex-1 px-6 py-4 border-2 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] disabled:bg-gray-100 disabled:text-gray-500 ${
+              error && !useSameNumber ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
           <button
             onClick={handleSubmit}
@@ -67,6 +100,10 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
             Send OTP
           </button>
         </div>
+
+        {error && !useSameNumber && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
 
         <div className="flex items-center space-x-3">
           <input

@@ -98,8 +98,6 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
           >
             <option value="English">English</option>
             <option value="Hindi">Hindi</option>
-            <option value="Spanish">Spanish</option>
-            <option value="Mandarin">Mandarin</option>
           </select>
         </div>
 

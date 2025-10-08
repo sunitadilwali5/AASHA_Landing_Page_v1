@@ -109,13 +109,23 @@ const InterestsStep: React.FC<InterestsStepProps> = ({ data, updateData, onNext,
         >
           Back
         </button>
-        <button
-          onClick={handleSubmit}
-          disabled={selectedInterests.length === 0}
-          className="px-8 py-3 bg-[#F35E4A] text-white rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Continue
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              updateData({ interests: [] });
+              onNext();
+            }}
+            className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-all"
+          >
+            Skip
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-8 py-3 bg-[#F35E4A] text-white rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all"
+          >
+            Continue
+          </button>
+        </div>
       </div>
     </div>
   );

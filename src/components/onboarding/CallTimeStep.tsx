@@ -48,7 +48,7 @@ const CallTimeStep: React.FC<CallTimeStepProps> = ({ data, updateData, onNext, o
         {isLovedOne ? 'When should Aasha call your loved one?' : 'When should Aasha call you?'}
       </h2>
 
-      <div className="grid md:grid-cols-3 gap-6 mb-6">
+      <div className="grid md:grid-cols-3 gap-6">
         {timeOptions.map((option) => {
           const Icon = option.icon;
           const isSelected = selectedTime === option.id;
@@ -81,17 +81,6 @@ const CallTimeStep: React.FC<CallTimeStepProps> = ({ data, updateData, onNext, o
           );
         })}
       </div>
-
-      <button
-        onClick={() => setSelectedTime('custom')}
-        className={`w-full p-6 rounded-2xl border-2 transition-all text-center ${
-          selectedTime === 'custom'
-            ? 'border-[#F35E4A] bg-white shadow-lg text-[#F35E4A]'
-            : 'border-gray-300 bg-white hover:border-[#F35E4A] text-gray-900'
-        }`}
-      >
-        <h3 className="text-xl font-bold">Custom Time Range</h3>
-      </button>
 
       <div className="flex justify-between mt-12">
         <button

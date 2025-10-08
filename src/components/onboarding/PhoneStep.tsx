@@ -10,12 +10,43 @@ interface PhoneStepProps {
 const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
   const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
   const [agreed, setAgreed] = useState(false);
+  const [error, setError] = useState('');
+
+  const validatePhoneNumber = (phone: string, countryCode: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (countryCode === '+1') {
+      return digitsOnly.length === 10;
+    } else if (countryCode === '+91') {
+      return digitsOnly.length === 10;
+    }
+    return false;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    setPhoneNumber(digitsOnly);
+    setError('');
+  };
 
   const handleSubmit = () => {
-    if (phoneNumber && agreed) {
-      updateData({ phoneNumber });
-      onNext();
+    if (!phoneNumber) {
+      setError('Phone number is required');
+      return;
     }
+    if (!validatePhoneNumber(phoneNumber, data.countryCode)) {
+      if (data.countryCode === '+1') {
+        setError('US phone number must be 10 digits');
+      } else if (data.countryCode === '+91') {
+        setError('Indian phone number must be 10 digits');
+      }
+      return;
+    }
+    if (!agreed) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+    updateData({ phoneNumber });
+    onNext();
   };
 
   return (
@@ -31,22 +62,30 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
         <div className="flex gap-4">
           <select
             value={data.countryCode}
-            onChange={(e) => updateData({ countryCode: e.target.value })}
+            onChange={(e) => {
+              updateData({ countryCode: e.target.value });
+              setError('');
+            }}
             className="px-4 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] bg-white w-32"
           >
-            <option value="+1">+1</option>
-            <option value="+91">+91</option>
-            <option value="+44">+44</option>
-            <option value="+61">+61</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+91">🇮🇳 +91</option>
           </select>
           <input
             type="tel"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="2345123451"
-            className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A]"
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            placeholder={data.countryCode === '+1' ? '2025551234' : '9876543210'}
+            maxLength={10}
+            className={`flex-1 px-6 py-4 border-2 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] ${
+              error ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
         </div>
+
+        {error && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
 
         <div className="flex items-start space-x-3 mt-8">
           <input
