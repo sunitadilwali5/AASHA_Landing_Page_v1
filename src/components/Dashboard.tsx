@@ -214,7 +214,7 @@ const Dashboard: React.FC = () => {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-gray-900">
               {menuItems.find((item) => item.id === currentSection)?.label || 'Dashboard'}
             </h1>
             <button
