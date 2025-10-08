@@ -1,6 +1,7 @@
-import React from 'react';
-import { CheckCircle, Phone, Mail } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { CheckCircle, Phone, Mail, Loader2 } from 'lucide-react';
 import { OnboardingData } from '../Onboarding';
+import { saveOnboardingData } from '../../services/onboardingService';
 
 interface ThankYouStepProps {
   data: OnboardingData;
@@ -8,6 +9,63 @@ interface ThankYouStepProps {
 }
 
 const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
+  const [saving, setSaving] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saveData = async () => {
+      try {
+        setSaving(true);
+        setError(null);
+        await saveOnboardingData(data);
+        setSaving(false);
+      } catch (err) {
+        console.error('Failed to save onboarding data:', err);
+        setError('Failed to save your information. Please try again.');
+        setSaving(false);
+      }
+    };
+
+    saveData();
+  }, []);
+
+  if (saving) {
+    return (
+      <div className="max-w-3xl mx-auto text-center py-12">
+        <div className="mb-8 flex justify-center">
+          <Loader2 className="h-20 w-20 text-[#F35E4A] animate-spin" />
+        </div>
+        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          Saving Your Information...
+        </h2>
+        <p className="text-xl text-gray-600">
+          Please wait while we set up your account.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto text-center py-12">
+        <div className="mb-8 flex justify-center">
+          <div className="bg-red-500 rounded-full p-6">
+            <CheckCircle className="h-20 w-20 text-white" />
+          </div>
+        </div>
+        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          Something Went Wrong
+        </h2>
+        <p className="text-xl text-red-600 mb-8">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-[#F35E4A] text-white px-12 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-lg"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="max-w-3xl mx-auto text-center py-12">
       <div className="mb-8 flex justify-center">

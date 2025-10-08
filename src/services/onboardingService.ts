@@ -1,0 +1,190 @@
+import { supabase } from '../lib/supabase';
+import type { OnboardingData } from '../components/Onboarding';
+
+export async function saveOnboardingData(data: OnboardingData) {
+  try {
+    if (data.registrationType === 'myself') {
+      return await saveMyselfRegistration(data);
+    } else if (data.registrationType === 'loved-one') {
+      return await saveLovedOneRegistration(data);
+    } else {
+      throw new Error('Invalid registration type');
+    }
+  } catch (error) {
+    console.error('Error saving onboarding data:', error);
+    throw error;
+  }
+}
+
+async function saveMyselfRegistration(data: OnboardingData) {
+  const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    phone: `${data.countryCode}${data.phoneNumber}`,
+    password: generateTemporaryPassword(),
+  });
+
+  if (signUpError) throw signUpError;
+  if (!authData.user) throw new Error('User creation failed');
+
+  const userId = authData.user.id;
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .insert({
+      id: userId,
+      phone_number: data.phoneNumber,
+      country_code: data.countryCode,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      date_of_birth: data.dateOfBirth,
+      gender: data.gender,
+      language: data.language,
+      marital_status: data.maritalStatus,
+      registration_type: 'myself',
+    })
+    .select()
+    .single();
+
+  if (profileError) throw profileError;
+
+  const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
+
+  const { data: elderlyProfile, error: elderlyError } = await supabase
+    .from('elderly_profiles')
+    .insert({
+      profile_id: userId,
+      caregiver_profile_id: null,
+      phone_number: data.phoneNumber,
+      country_code: data.countryCode,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      date_of_birth: data.dateOfBirth,
+      gender: data.gender,
+      language: data.language,
+      marital_status: data.maritalStatus,
+      call_time_preference: callTimePreference,
+      relationship_to_caregiver: null,
+    })
+    .select()
+    .single();
+
+  if (elderlyError) throw elderlyError;
+
+  await saveMedications(elderlyProfile.id, data.medications);
+  await saveInterests(elderlyProfile.id, data.interests);
+
+  return { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
+}
+
+async function saveLovedOneRegistration(data: OnboardingData) {
+  const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    phone: `${data.countryCode}${data.phoneNumber}`,
+    password: generateTemporaryPassword(),
+  });
+
+  if (signUpError) throw signUpError;
+  if (!authData.user) throw new Error('User creation failed');
+
+  const caregiverId = authData.user.id;
+
+  const { data: caregiverProfile, error: caregiverError } = await supabase
+    .from('profiles')
+    .insert({
+      id: caregiverId,
+      phone_number: data.phoneNumber,
+      country_code: data.countryCode,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      date_of_birth: data.dateOfBirth,
+      gender: data.gender,
+      language: data.language,
+      marital_status: data.maritalStatus,
+      registration_type: 'loved-one',
+    })
+    .select()
+    .single();
+
+  if (caregiverError) throw caregiverError;
+
+  const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
+
+  const { data: elderlyProfile, error: elderlyError } = await supabase
+    .from('elderly_profiles')
+    .insert({
+      profile_id: null,
+      caregiver_profile_id: caregiverId,
+      phone_number: data.lovedOnePhoneNumber!,
+      country_code: data.lovedOneCountryCode!,
+      first_name: data.lovedOneFirstName!,
+      last_name: data.lovedOneLastName!,
+      date_of_birth: data.lovedOneDateOfBirth!,
+      gender: data.lovedOneGender!,
+      language: data.lovedOneLanguage!,
+      marital_status: data.lovedOneMaritalStatus!,
+      call_time_preference: callTimePreference,
+      relationship_to_caregiver: data.relationship!,
+    })
+    .select()
+    .single();
+
+  if (elderlyError) throw elderlyError;
+
+  await saveMedications(elderlyProfile.id, data.medications);
+  await saveInterests(elderlyProfile.id, data.interests);
+
+  return { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
+}
+
+async function saveMedications(elderlyProfileId: string, medications: OnboardingData['medications']) {
+  if (medications.length === 0) return;
+
+  const medicationsToInsert = medications.map(med => ({
+    elderly_profile_id: elderlyProfileId,
+    name: med.name,
+    dosage: med.dosage,
+    frequency: med.frequency,
+    time: med.time,
+  }));
+
+  const { error } = await supabase
+    .from('medications')
+    .insert(medicationsToInsert);
+
+  if (error) throw error;
+}
+
+async function saveInterests(elderlyProfileId: string, interests: string[]) {
+  if (interests.length === 0) return;
+
+  const interestsToInsert = interests.map(interest => ({
+    elderly_profile_id: elderlyProfileId,
+    interest,
+  }));
+
+  const { error } = await supabase
+    .from('interests')
+    .insert(interestsToInsert);
+
+  if (error) throw error;
+}
+
+function mapCallTimeToPreference(
+  callTime: string,
+  customTimeRange?: { start: string; end: string }
+): 'morning' | 'afternoon' | 'evening' {
+  if (callTime === 'morning') return 'morning';
+  if (callTime === 'afternoon') return 'afternoon';
+  if (callTime === 'evening') return 'evening';
+
+  if (callTime === 'custom' && customTimeRange) {
+    const startHour = parseInt(customTimeRange.start.split(':')[0]);
+    if (startHour >= 6 && startHour < 12) return 'morning';
+    if (startHour >= 12 && startHour < 17) return 'afternoon';
+    return 'evening';
+  }
+
+  return 'afternoon';
+}
+
+function generateTemporaryPassword(): string {
+  return Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
+}
