@@ -29,11 +29,13 @@ import {
 import { supabase } from './lib/supabase';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
+import FamilyDashboard from './components/FamilyDashboard';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isFamilyMember, setIsFamilyMember] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -41,6 +43,9 @@ function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
+      if (session) {
+        checkUserType();
+      }
     });
 
     return () => {
@@ -52,10 +57,49 @@ function App() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
+      if (session) {
+        await checkUserType();
+      }
     } catch (error) {
       console.error('Error checking auth:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkUserType = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: elderlyProfile, error: elderlyError } = await supabase
+        .from('elderly_profiles')
+        .select('id, profile_id, caregiver_profile_id')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+
+      if (elderlyError) {
+        console.error('Error checking elderly profile:', elderlyError);
+      }
+
+      if (elderlyProfile) {
+        setIsFamilyMember(false);
+        return;
+      }
+
+      const { data: familyProfile, error: familyError } = await supabase
+        .from('elderly_profiles')
+        .select('id')
+        .eq('caregiver_profile_id', user.id)
+        .maybeSingle();
+
+      if (familyError) {
+        console.error('Error checking family profile:', familyError);
+      }
+
+      setIsFamilyMember(!!familyProfile);
+    } catch (error) {
+      console.error('Error checking user type:', error);
     }
   };
 
@@ -71,7 +115,7 @@ function App() {
   }
 
   if (isAuthenticated) {
-    return <Dashboard />;
+    return isFamilyMember ? <FamilyDashboard /> : <Dashboard />;
   }
 
   const scrollToSection = (sectionId: string) => {

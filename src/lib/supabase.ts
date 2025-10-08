@@ -190,6 +190,140 @@ export interface Database {
           notes?: string;
         };
       };
+      family_member_alerts: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          family_member_id: string;
+          alert_type: 'medication_missed' | 'no_conversation' | 'mood_change' | 'health_concern' | 'system_notification';
+          severity: 'low' | 'medium' | 'high' | 'critical';
+          title: string;
+          description: string;
+          related_entity_id: string | null;
+          is_acknowledged: boolean;
+          acknowledged_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          family_member_id: string;
+          alert_type: 'medication_missed' | 'no_conversation' | 'mood_change' | 'health_concern' | 'system_notification';
+          severity: 'low' | 'medium' | 'high' | 'critical';
+          title: string;
+          description: string;
+          related_entity_id?: string | null;
+          is_acknowledged?: boolean;
+          acknowledged_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          is_acknowledged?: boolean;
+          acknowledged_at?: string | null;
+        };
+      };
+      shared_content: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          uploaded_by: string;
+          content_type: 'family_news' | 'photo' | 'milestone' | 'reminder' | 'conversation_topic';
+          title: string;
+          description: string;
+          file_url: string | null;
+          tags: string[];
+          is_approved: boolean;
+          mention_priority: 'low' | 'normal' | 'high';
+          expiration_date: string | null;
+          mentioned_count: number;
+          last_mentioned_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          uploaded_by: string;
+          content_type: 'family_news' | 'photo' | 'milestone' | 'reminder' | 'conversation_topic';
+          title: string;
+          description: string;
+          file_url?: string | null;
+          tags?: string[];
+          is_approved?: boolean;
+          mention_priority?: 'low' | 'normal' | 'high';
+          expiration_date?: string | null;
+          mentioned_count?: number;
+          last_mentioned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          content_type?: 'family_news' | 'photo' | 'milestone' | 'reminder' | 'conversation_topic';
+          title?: string;
+          description?: string;
+          file_url?: string | null;
+          tags?: string[];
+          is_approved?: boolean;
+          mention_priority?: 'low' | 'normal' | 'high';
+          expiration_date?: string | null;
+        };
+      };
+      family_activity_log: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          family_member_id: string;
+          action_type: 'profile_updated' | 'medication_added' | 'medication_updated' | 'medication_deleted' | 'event_created' | 'event_updated' | 'event_deleted' | 'content_uploaded' | 'interest_added' | 'interest_removed' | 'alert_acknowledged';
+          entity_type: 'profile' | 'medication' | 'event' | 'interest' | 'content' | 'conversation' | 'alert';
+          entity_id: string | null;
+          description: string;
+          metadata: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          family_member_id: string;
+          action_type: 'profile_updated' | 'medication_added' | 'medication_updated' | 'medication_deleted' | 'event_created' | 'event_updated' | 'event_deleted' | 'content_uploaded' | 'interest_added' | 'interest_removed' | 'alert_acknowledged';
+          entity_type: 'profile' | 'medication' | 'event' | 'interest' | 'content' | 'conversation' | 'alert';
+          entity_id?: string | null;
+          description: string;
+          metadata?: Record<string, any>;
+          created_at?: string;
+        };
+      };
+      conversation_prompts: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          created_by: string;
+          prompt_text: string;
+          category: 'memory' | 'family_update' | 'health_check' | 'activity_suggestion' | 'general';
+          priority: 'low' | 'normal' | 'high';
+          is_active: boolean;
+          used_count: number;
+          last_used_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          created_by: string;
+          prompt_text: string;
+          category: 'memory' | 'family_update' | 'health_check' | 'activity_suggestion' | 'general';
+          priority?: 'low' | 'normal' | 'high';
+          is_active?: boolean;
+          used_count?: number;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          prompt_text?: string;
+          category?: 'memory' | 'family_update' | 'health_check' | 'activity_suggestion' | 'general';
+          priority?: 'low' | 'normal' | 'high';
+          is_active?: boolean;
+        };
+      };
     };
   };
 }
