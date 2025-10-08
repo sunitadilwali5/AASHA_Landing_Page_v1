@@ -11,9 +11,8 @@ interface MedicationStepProps {
 
 interface Medication {
   name: string;
-  dosage: string;
-  frequency: string;
-  time: string;
+  dosage_quantity: number;
+  times_of_day: string[];
 }
 
 const MedicationStep: React.FC<MedicationStepProps> = ({ data, updateData, onNext, onBack }) => {
@@ -21,17 +20,33 @@ const MedicationStep: React.FC<MedicationStepProps> = ({ data, updateData, onNex
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMed, setNewMed] = useState<Medication>({
     name: '',
-    dosage: '',
-    frequency: '',
-    time: '',
+    dosage_quantity: 1,
+    times_of_day: [],
   });
 
   const handleAddMedication = () => {
-    if (newMed.name && newMed.dosage && newMed.frequency && newMed.time) {
+    if (newMed.name && newMed.times_of_day.length > 0) {
       setMedications([...medications, newMed]);
-      setNewMed({ name: '', dosage: '', frequency: '', time: '' });
+      setNewMed({ name: '', dosage_quantity: 1, times_of_day: [] });
       setShowAddForm(false);
     }
+  };
+
+  const toggleTimeOfDay = (time: string) => {
+    setNewMed(prev => ({
+      ...prev,
+      times_of_day: prev.times_of_day.includes(time)
+        ? prev.times_of_day.filter(t => t !== time)
+        : [...prev.times_of_day, time]
+    }));
+  };
+
+  const incrementDosage = () => {
+    setNewMed(prev => ({ ...prev, dosage_quantity: prev.dosage_quantity + 1 }));
+  };
+
+  const decrementDosage = () => {
+    setNewMed(prev => ({ ...prev, dosage_quantity: Math.max(1, prev.dosage_quantity - 1) }));
   };
 
   const handleRemoveMedication = (index: number) => {
@@ -74,7 +89,7 @@ const MedicationStep: React.FC<MedicationStepProps> = ({ data, updateData, onNex
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900">{med.name}</h4>
                   <p className="text-sm text-gray-600">
-                    {med.dosage} • {med.frequency} • {med.time}
+                    {med.dosage_quantity} {med.dosage_quantity === 1 ? 'tablet' : 'tablets'} • {med.times_of_day.join(', ')}
                   </p>
                 </div>
                 <button
@@ -87,56 +102,75 @@ const MedicationStep: React.FC<MedicationStepProps> = ({ data, updateData, onNex
             ))}
 
             {showAddForm && (
-              <div className="p-6 bg-gray-50 rounded-lg border-2 border-[#F35E4A]">
-                <h4 className="font-semibold text-gray-900 mb-4">Add Medication</h4>
-                <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-6 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
                   <input
                     type="text"
                     placeholder="Medication name"
                     value={newMed.name}
                     onChange={(e) => setNewMed({ ...newMed, name: e.target.value })}
-                    className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F35E4A]"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F35E4A] text-lg"
                   />
-                  <input
-                    type="text"
-                    placeholder="Dosage (e.g., 50mg)"
-                    value={newMed.dosage}
-                    onChange={(e) => setNewMed({ ...newMed, dosage: e.target.value })}
-                    className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F35E4A]"
-                  />
-                  <select
-                    value={newMed.frequency}
-                    onChange={(e) => setNewMed({ ...newMed, frequency: e.target.value })}
-                    className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F35E4A]"
-                  >
-                    <option value="">Frequency</option>
-                    <option value="Once daily">Once daily</option>
-                    <option value="Twice daily">Twice daily</option>
-                    <option value="Three times daily">Three times daily</option>
-                    <option value="As needed">As needed</option>
-                  </select>
-                  <input
-                    type="time"
-                    value={newMed.time}
-                    onChange={(e) => setNewMed({ ...newMed, time: e.target.value })}
-                    className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#F35E4A]"
-                  />
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={handleAddMedication}
-                    className="flex-1 bg-[#F35E4A] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
-                  >
-                    Add
-                  </button>
                   <button
                     onClick={() => {
                       setShowAddForm(false);
-                      setNewMed({ name: '', dosage: '', frequency: '', time: '' });
+                      setNewMed({ name: '', dosage_quantity: 1, times_of_day: [] });
                     }}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                    className="ml-4 text-red-500 hover:text-red-700 p-2"
                   >
-                    Cancel
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-3">Dosage quantity</label>
+                    <div className="flex items-center justify-between bg-gray-50 border border-gray-300 rounded-lg px-6 py-4">
+                      <button
+                        onClick={decrementDosage}
+                        className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+                        type="button"
+                      >
+                        −
+                      </button>
+                      <span className="text-2xl font-semibold text-gray-900">{newMed.dosage_quantity}</span>
+                      <button
+                        onClick={incrementDosage}
+                        className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 font-medium mb-3">Times of Day</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['Morning', 'Afternoon', 'Evening', 'Night'].map((time) => (
+                        <label
+                          key={time}
+                          className="flex items-center space-x-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={newMed.times_of_day.includes(time)}
+                            onChange={() => toggleTimeOfDay(time)}
+                            className="w-5 h-5 text-[#F35E4A] border-gray-300 rounded focus:ring-[#F35E4A]"
+                          />
+                          <span className="text-gray-700">{time}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6">
+                  <button
+                    onClick={handleAddMedication}
+                    disabled={!newMed.name || newMed.times_of_day.length === 0}
+                    className="w-full bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Add Medication
                   </button>
                 </div>
               </div>

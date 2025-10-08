@@ -41,9 +41,8 @@ export interface OnboardingData {
   customTimeRange?: { start: string; end: string };
   medications: Array<{
     name: string;
-    dosage: string;
-    frequency: string;
-    time: string;
+    dosage_quantity: number;
+    times_of_day: string[];
   }>;
   interests: string[];
 }

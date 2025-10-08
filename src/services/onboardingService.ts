@@ -247,9 +247,8 @@ async function saveMedications(elderlyProfileId: string, medications: Onboarding
   const medicationsToInsert = medications.map(med => ({
     elderly_profile_id: elderlyProfileId,
     name: med.name,
-    dosage: med.dosage,
-    frequency: med.frequency,
-    time: med.time,
+    dosage_quantity: med.dosage_quantity,
+    times_of_day: med.times_of_day,
   }));
 
   const { error } = await supabase
