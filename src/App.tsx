@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  MessageCircle, 
-  Heart, 
-  Shield, 
-  Users, 
-  Brain, 
-  Zap, 
-  CheckCircle, 
+import {
+  MessageCircle,
+  Heart,
+  Shield,
+  Users,
+  Brain,
+  Zap,
+  CheckCircle,
   Star,
   ArrowRight,
   Phone,
@@ -26,9 +26,11 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import Onboarding from './components/Onboarding';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -75,7 +77,10 @@ function App() {
               </button>
             </div>
             <div className="hidden md:flex items-center">
-              <button className="bg-[#F35E4A] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md">
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="bg-[#F35E4A] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md"
+              >
                 Get Started
               </button>
             </div>
@@ -119,7 +124,10 @@ function App() {
                 >
                   FAQ
                 </button>
-                <button className="w-full bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md mt-4">
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="w-full bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md mt-4"
+                >
                   Get Started
                 </button>
               </div>
@@ -140,7 +148,10 @@ function App() {
                 Always there with care, support, guidance and conversations that fit your graceful vibe with comfort, joy and peace.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <button className="bg-[#F35E4A] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-lg hover:shadow-xl">
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="bg-[#F35E4A] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-lg hover:shadow-xl"
+                >
                   Get Started for Free
                 </button>
                 <button className="border-2 border-[#F35E4A] text-[#F35E4A] px-8 py-4 rounded-lg text-lg font-semibold hover:bg-[#F35E4A] hover:text-white transition-all shadow-md hover:shadow-lg">
@@ -589,7 +600,10 @@ function App() {
           </div>
 
           <div className="text-center mt-12">
-            <button className="bg-[#F35E4A] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md hover:shadow-lg">
+            <button
+              onClick={() => setShowOnboarding(true)}
+              className="bg-[#F35E4A] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-md hover:shadow-lg"
+            >
               Enroll for Free
             </button>
           </div>
@@ -772,7 +786,10 @@ function App() {
             Join thousands of people finding joy, families who have found companionship and joy with AASHA.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-[#F35E4A] px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all flex items-center justify-center shadow-lg hover:shadow-xl">
+            <button
+              onClick={() => setShowOnboarding(true)}
+              className="bg-white text-[#F35E4A] px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
+            >
               Get Started for Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </button>
@@ -837,6 +854,10 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {showOnboarding && (
+        <Onboarding onClose={() => setShowOnboarding(false)} />
+      )}
     </div>
   );
 }
