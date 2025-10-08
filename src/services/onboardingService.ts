@@ -24,6 +24,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
     email,
     password,
     options: {
+      emailRedirectTo: undefined,
       data: {
         phone: `${data.countryCode}${data.phoneNumber}`,
       }
@@ -37,6 +38,18 @@ async function saveMyselfRegistration(data: OnboardingData) {
   if (!authData.user) throw new Error('User creation failed');
 
   const userId = authData.user.id;
+
+  if (!authData.session) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      console.error('Sign in error after signup:', signInError);
+      throw new Error(`Failed to authenticate: ${signInError.message}`);
+    }
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -100,6 +113,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     email,
     password,
     options: {
+      emailRedirectTo: undefined,
       data: {
         phone: `${data.countryCode}${data.phoneNumber}`,
       }
@@ -113,6 +127,18 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   if (!authData.user) throw new Error('User creation failed');
 
   const caregiverId = authData.user.id;
+
+  if (!authData.session) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      console.error('Sign in error after signup:', signInError);
+      throw new Error(`Failed to authenticate: ${signInError.message}`);
+    }
+  }
 
   const { data: caregiverProfile, error: caregiverError } = await supabase
     .from('profiles')
