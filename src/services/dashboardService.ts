@@ -58,7 +58,7 @@ export async function getMedications(elderlyProfileId: string) {
     .from('medications')
     .select('*')
     .eq('elderly_profile_id', elderlyProfileId)
-    .order('time', { ascending: true });
+    .order('name', { ascending: true });
 
   if (error) {
     console.error('Error fetching medications:', error);
@@ -71,9 +71,8 @@ export async function getMedications(elderlyProfileId: string) {
 export async function addMedication(medication: {
   elderly_profile_id: string;
   name: string;
-  dosage: string;
-  frequency: string;
-  time: string;
+  dosage_quantity: number;
+  times_of_day: string[];
 }) {
   const { data, error } = await supabase
     .from('medications')
@@ -91,9 +90,8 @@ export async function addMedication(medication: {
 
 export async function updateMedication(medicationId: string, updates: {
   name?: string;
-  dosage?: string;
-  frequency?: string;
-  time?: string;
+  dosage_quantity?: number;
+  times_of_day?: string[];
 }) {
   const { data, error } = await supabase
     .from('medications')

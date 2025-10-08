@@ -143,7 +143,7 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
       </div>
 
       <button
-        onClick={onClose}
+        onClick={() => window.location.reload()}
         className="bg-[#F35E4A] text-white px-12 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-lg"
       >
         Go to Dashboard

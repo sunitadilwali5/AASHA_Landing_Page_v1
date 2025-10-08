@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Pill, Plus, Edit2, Trash2, Check, X, Clock, Calendar } from 'lucide-react';
+import { Pill, Plus, Edit2, Trash2, X } from 'lucide-react';
 import {
   getMedications,
   addMedication,
   updateMedication,
   deleteMedication,
-  trackMedicationTaken,
-  getMedicationTracking,
 } from '../../services/dashboardService';
 
 interface MedicationsSectionProps {
@@ -23,9 +21,8 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
-    dosage: '',
-    frequency: 'Once daily',
-    time: '09:00',
+    dosage_quantity: 1,
+    times_of_day: [] as string[],
   });
 
   useEffect(() => {
@@ -44,8 +41,29 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
     }
   };
 
+  const toggleTimeOfDay = (time: string) => {
+    setFormData(prev => ({
+      ...prev,
+      times_of_day: prev.times_of_day.includes(time)
+        ? prev.times_of_day.filter(t => t !== time)
+        : [...prev.times_of_day, time]
+    }));
+  };
+
+  const incrementDosage = () => {
+    setFormData(prev => ({ ...prev, dosage_quantity: prev.dosage_quantity + 1 }));
+  };
+
+  const decrementDosage = () => {
+    setFormData(prev => ({ ...prev, dosage_quantity: Math.max(1, prev.dosage_quantity - 1) }));
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.times_of_day.length === 0) {
+      alert('Please select at least one time of day');
+      return;
+    }
     try {
       await addMedication({
         elderly_profile_id: elderlyProfile.id,
@@ -63,6 +81,10 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMed) return;
+    if (formData.times_of_day.length === 0) {
+      alert('Please select at least one time of day');
+      return;
+    }
     try {
       await updateMedication(selectedMed.id, formData);
       await loadMedications();
@@ -86,28 +108,12 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
     }
   };
 
-  const handleTrack = async (med: any, status: 'taken' | 'skipped') => {
-    try {
-      const now = new Date();
-      const scheduledDatetime = new Date();
-      const [hours, minutes] = med.time.split(':');
-      scheduledDatetime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-      await trackMedicationTaken(med.id, scheduledDatetime.toISOString(), status);
-      alert(`Medication marked as ${status}`);
-    } catch (error) {
-      console.error('Error tracking medication:', error);
-      alert('Failed to track medication');
-    }
-  };
-
   const openEditModal = (med: any) => {
     setSelectedMed(med);
     setFormData({
       name: med.name,
-      dosage: med.dosage,
-      frequency: med.frequency,
-      time: med.time,
+      dosage_quantity: med.dosage_quantity,
+      times_of_day: med.times_of_day || [],
     });
     setShowEditModal(true);
   };
@@ -115,9 +121,8 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
   const resetForm = () => {
     setFormData({
       name: '',
-      dosage: '',
-      frequency: 'Once daily',
-      time: '09:00',
+      dosage_quantity: 1,
+      times_of_day: [],
     });
   };
 
@@ -142,7 +147,7 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">My Medications</h2>
-          <p className="text-gray-600 mt-2">Manage your daily medications and track adherence</p>
+          <p className="text-gray-600 mt-2">Manage your daily medications</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
@@ -165,7 +170,9 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-gray-900">{med.name}</h3>
-                    <p className="text-sm text-gray-600">{med.dosage}</p>
+                    <p className="text-sm text-gray-600">
+                      {med.dosage_quantity} {med.dosage_quantity === 1 ? 'tablet' : 'tablets'}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -184,32 +191,15 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-gray-700">
-                  <Clock className="h-4 w-4 mr-2 text-[#F35E4A]" />
-                  <span>{med.time}</span>
+              <div className="mb-2">
+                <p className="text-sm text-gray-600 mb-2">Times of Day:</p>
+                <div className="flex flex-wrap gap-2">
+                  {(med.times_of_day || []).map((time: string) => (
+                    <span key={time} className="bg-[#F35E4A] bg-opacity-10 text-[#F35E4A] px-3 py-1 rounded-full text-sm font-medium">
+                      {time}
+                    </span>
+                  ))}
                 </div>
-                <div className="flex items-center text-sm text-gray-700">
-                  <Calendar className="h-4 w-4 mr-2 text-[#F35E4A]" />
-                  <span>{med.frequency}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => handleTrack(med, 'taken')}
-                  className="flex-1 flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition-all"
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Taken
-                </button>
-                <button
-                  onClick={() => handleTrack(med, 'skipped')}
-                  className="flex-1 flex items-center justify-center border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-all"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Skip
-                </button>
               </div>
             </div>
           ))}
@@ -231,11 +221,20 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
       {/* Add/Edit Modal */}
       {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">
-              {showAddModal ? 'Add New Medication' : 'Edit Medication'}
-            </h3>
-            <form onSubmit={showAddModal ? handleAdd : handleEdit} className="space-y-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {showAddModal ? 'Add New Medication' : 'Edit Medication'}
+              </h3>
+              <button
+                onClick={closeModals}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={showAddModal ? handleAdd : handleEdit} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Medication Name
@@ -250,45 +249,50 @@ const MedicationsSection: React.FC<MedicationsSectionProps> = ({ elderlyProfile 
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Dosage</label>
-                <input
-                  type="text"
-                  value={formData.dosage}
-                  onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#F35E4A] focus:outline-none text-lg"
-                  placeholder="e.g., 50mg"
-                  required
-                />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Dosage Quantity</label>
+                  <div className="flex items-center justify-between bg-gray-50 border-2 border-gray-200 rounded-lg px-6 py-3">
+                    <button
+                      type="button"
+                      onClick={decrementDosage}
+                      className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+                    >
+                      −
+                    </button>
+                    <span className="text-2xl font-semibold text-gray-900">{formData.dosage_quantity}</span>
+                    <button
+                      type="button"
+                      onClick={incrementDosage}
+                      className="text-gray-600 hover:text-gray-900 text-2xl font-bold w-8 h-8 flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Times of Day</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Morning', 'Afternoon', 'Evening', 'Night'].map((time) => (
+                      <label
+                        key={time}
+                        className="flex items-center space-x-2 cursor-pointer bg-gray-50 border-2 border-gray-200 rounded-lg px-3 py-2 hover:border-[#F35E4A] transition-all"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.times_of_day.includes(time)}
+                          onChange={() => toggleTimeOfDay(time)}
+                          className="w-4 h-4 text-[#F35E4A] border-gray-300 rounded focus:ring-[#F35E4A]"
+                        />
+                        <span className="text-sm text-gray-700">{time}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Frequency</label>
-                <select
-                  value={formData.frequency}
-                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#F35E4A] focus:outline-none text-lg"
-                  required
-                >
-                  <option value="Once daily">Once daily</option>
-                  <option value="Twice daily">Twice daily</option>
-                  <option value="Three times daily">Three times daily</option>
-                  <option value="As needed">As needed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Time</label>
-                <input
-                  type="time"
-                  value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#F35E4A] focus:outline-none text-lg"
-                  required
-                />
-              </div>
-
-              <div className="flex items-center gap-4 mt-6">
+              <div className="flex items-center gap-4 pt-4">
                 <button
                   type="submit"
                   className="flex-1 bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
