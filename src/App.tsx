@@ -26,11 +26,53 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import Onboarding from './components/Onboarding';
+import Dashboard from './components/Dashboard';
 
 function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    checkAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F4F2EE] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#F35E4A] mx-auto"></div>
+          <p className="mt-4 text-xl text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Dashboard />;
+  }
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

@@ -114,6 +114,82 @@ export interface Database {
           created_at?: string;
         };
       };
+      conversations: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          conversation_date: string;
+          duration_minutes: number;
+          summary: string;
+          full_transcript: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          conversation_date?: string;
+          duration_minutes?: number;
+          summary?: string;
+          full_transcript?: string | null;
+          created_at?: string;
+        };
+      };
+      special_events: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          event_name: string;
+          event_date: string;
+          event_type: 'birthday' | 'anniversary' | 'appointment' | 'family_visit' | 'holiday' | 'other';
+          description: string;
+          is_recurring: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          event_name: string;
+          event_date: string;
+          event_type: 'birthday' | 'anniversary' | 'appointment' | 'family_visit' | 'holiday' | 'other';
+          description?: string;
+          is_recurring?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          event_name?: string;
+          event_date?: string;
+          event_type?: 'birthday' | 'anniversary' | 'appointment' | 'family_visit' | 'holiday' | 'other';
+          description?: string;
+          is_recurring?: boolean;
+        };
+      };
+      medication_tracking: {
+        Row: {
+          id: string;
+          medication_id: string;
+          scheduled_datetime: string;
+          taken_datetime: string | null;
+          status: 'taken' | 'missed' | 'skipped';
+          notes: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          medication_id: string;
+          scheduled_datetime: string;
+          taken_datetime?: string | null;
+          status: 'taken' | 'missed' | 'skipped';
+          notes?: string;
+          created_at?: string;
+        };
+        Update: {
+          taken_datetime?: string | null;
+          status?: 'taken' | 'missed' | 'skipped';
+          notes?: string;
+        };
+      };
     };
   };
 }

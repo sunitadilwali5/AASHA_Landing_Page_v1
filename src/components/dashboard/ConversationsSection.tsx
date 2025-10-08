@@ -1,0 +1,225 @@
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, Clock, Search, ChevronRight, X, FileText } from 'lucide-react';
+import { getConversations, getConversation } from '../../services/dashboardService';
+
+interface ConversationsSectionProps {
+  elderlyProfile: {
+    id: string;
+  };
+}
+
+const ConversationsSection: React.FC<ConversationsSectionProps> = ({ elderlyProfile }) => {
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<any[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConversations();
+  }, [elderlyProfile.id]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredConversations(conversations);
+    } else {
+      const filtered = conversations.filter(
+        (conv) =>
+          conv.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          new Date(conv.conversation_date).toLocaleDateString().includes(searchQuery)
+      );
+      setFilteredConversations(filtered);
+    }
+  }, [searchQuery, conversations]);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const data = await getConversations(elderlyProfile.id);
+      setConversations(data);
+      setFilteredConversations(data);
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewDetails = async (conversation: any) => {
+    setSelectedConversation(conversation);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedConversation(null);
+    setShowTranscript(false);
+  };
+
+  const formatDuration = (minutes: number) => {
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#F35E4A]"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="bg-white rounded-2xl shadow-md p-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">My Conversations</h2>
+        <p className="text-gray-600">Review your past conversations with Aasha</p>
+      </div>
+
+      {/* Search */}
+      <div className="bg-white rounded-xl shadow-md p-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search conversations by date or topic..."
+            className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#F35E4A] focus:outline-none text-lg"
+          />
+        </div>
+      </div>
+
+      {/* Conversations List */}
+      {filteredConversations.length > 0 ? (
+        <div className="space-y-4">
+          {filteredConversations.map((conversation) => (
+            <div
+              key={conversation.id}
+              className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => handleViewDetails(conversation)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start flex-1">
+                  <div className="bg-[#F35E4A] bg-opacity-10 rounded-lg p-3 mr-4">
+                    <MessageCircle className="h-6 w-6 text-[#F35E4A]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {new Date(conversation.conversation_date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </h3>
+                      <span className="ml-3 flex items-center text-sm text-gray-600">
+                        <Clock className="h-4 w-4 mr-1" />
+                        {formatDuration(conversation.duration_minutes)}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 line-clamp-2">{conversation.summary}</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-6 w-6 text-gray-400 ml-4 flex-shrink-0" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+          <MessageCircle className="h-24 w-24 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            {searchQuery ? 'No Conversations Found' : 'No Conversations Yet'}
+          </h3>
+          <p className="text-gray-600">
+            {searchQuery
+              ? 'Try a different search term'
+              : 'Your conversation history will appear here after your first call with Aasha'}
+          </p>
+        </div>
+      )}
+
+      {/* Conversation Detail Modal */}
+      {selectedConversation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    {new Date(selectedConversation.conversation_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </h3>
+                  <p className="text-gray-600 mt-1 flex items-center">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Duration: {formatDuration(selectedConversation.duration_minutes)}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-6">
+                {/* Summary */}
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-3">Conversation Summary</h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 leading-relaxed">{selectedConversation.summary}</p>
+                  </div>
+                </div>
+
+                {/* Transcript Section */}
+                {selectedConversation.full_transcript && (
+                  <div>
+                    <button
+                      onClick={() => setShowTranscript(!showTranscript)}
+                      className="flex items-center text-[#F35E4A] font-semibold hover:underline mb-3"
+                    >
+                      <FileText className="h-5 w-5 mr-2" />
+                      {showTranscript ? 'Hide' : 'View'} Full Transcript
+                    </button>
+                    {showTranscript && (
+                      <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <pre className="text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">
+                          {selectedConversation.full_transcript}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={handleCloseDetails}
+                className="w-full bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ConversationsSection;
