@@ -19,9 +19,10 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
         setError(null);
         await saveOnboardingData(data);
         setSaving(false);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to save onboarding data:', err);
-        setError('Failed to save your information. Please try again.');
+        const errorMessage = err?.message || 'Failed to save your information. Please try again.';
+        setError(errorMessage);
         setSaving(false);
       }
     };

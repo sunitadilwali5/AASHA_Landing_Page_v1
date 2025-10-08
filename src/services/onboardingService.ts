@@ -17,12 +17,23 @@ export async function saveOnboardingData(data: OnboardingData) {
 }
 
 async function saveMyselfRegistration(data: OnboardingData) {
+  const email = `${data.phoneNumber}@aasha-temp.com`;
+  const password = generateTemporaryPassword();
+
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
-    phone: `${data.countryCode}${data.phoneNumber}`,
-    password: generateTemporaryPassword(),
+    email,
+    password,
+    options: {
+      data: {
+        phone: `${data.countryCode}${data.phoneNumber}`,
+      }
+    }
   });
 
-  if (signUpError) throw signUpError;
+  if (signUpError) {
+    console.error('Signup error:', signUpError);
+    throw new Error(`Failed to create account: ${signUpError.message}`);
+  }
   if (!authData.user) throw new Error('User creation failed');
 
   const userId = authData.user.id;
@@ -44,7 +55,10 @@ async function saveMyselfRegistration(data: OnboardingData) {
     .select()
     .single();
 
-  if (profileError) throw profileError;
+  if (profileError) {
+    console.error('Profile insert error:', profileError);
+    throw new Error(`Failed to create profile: ${profileError.message}`);
+  }
 
   const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
 
@@ -67,7 +81,10 @@ async function saveMyselfRegistration(data: OnboardingData) {
     .select()
     .single();
 
-  if (elderlyError) throw elderlyError;
+  if (elderlyError) {
+    console.error('Elderly profile insert error:', elderlyError);
+    throw new Error(`Failed to create elderly profile: ${elderlyError.message}`);
+  }
 
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
@@ -76,12 +93,23 @@ async function saveMyselfRegistration(data: OnboardingData) {
 }
 
 async function saveLovedOneRegistration(data: OnboardingData) {
+  const email = `${data.phoneNumber}@aasha-temp.com`;
+  const password = generateTemporaryPassword();
+
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
-    phone: `${data.countryCode}${data.phoneNumber}`,
-    password: generateTemporaryPassword(),
+    email,
+    password,
+    options: {
+      data: {
+        phone: `${data.countryCode}${data.phoneNumber}`,
+      }
+    }
   });
 
-  if (signUpError) throw signUpError;
+  if (signUpError) {
+    console.error('Signup error:', signUpError);
+    throw new Error(`Failed to create account: ${signUpError.message}`);
+  }
   if (!authData.user) throw new Error('User creation failed');
 
   const caregiverId = authData.user.id;
@@ -103,7 +131,10 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     .select()
     .single();
 
-  if (caregiverError) throw caregiverError;
+  if (caregiverError) {
+    console.error('Caregiver profile insert error:', caregiverError);
+    throw new Error(`Failed to create caregiver profile: ${caregiverError.message}`);
+  }
 
   const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
 
@@ -126,7 +157,10 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     .select()
     .single();
 
-  if (elderlyError) throw elderlyError;
+  if (elderlyError) {
+    console.error('Elderly profile insert error (loved-one):', elderlyError);
+    throw new Error(`Failed to create elderly profile: ${elderlyError.message}`);
+  }
 
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
@@ -149,7 +183,10 @@ async function saveMedications(elderlyProfileId: string, medications: Onboarding
     .from('medications')
     .insert(medicationsToInsert);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Medications insert error:', error);
+    throw new Error(`Failed to save medications: ${error.message}`);
+  }
 }
 
 async function saveInterests(elderlyProfileId: string, interests: string[]) {
@@ -164,7 +201,10 @@ async function saveInterests(elderlyProfileId: string, interests: string[]) {
     .from('interests')
     .insert(interestsToInsert);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Interests insert error:', error);
+    throw new Error(`Failed to save interests: ${error.message}`);
+  }
 }
 
 function mapCallTimeToPreference(
