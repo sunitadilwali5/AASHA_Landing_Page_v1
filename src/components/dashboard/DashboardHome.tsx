@@ -148,19 +148,19 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ elderlyProfile, onNavigat
       </div>
 
       {/* Next Call Schedule */}
-      <div className="bg-gradient-to-r from-[#F35E4A] to-[#e54d37] rounded-2xl shadow-lg p-8 text-white">
+      <div className="bg-white rounded-2xl shadow-md p-8">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center mb-4">
-              <Clock className="h-8 w-8 mr-3" />
-              <h3 className="text-2xl font-bold">Your Next Aasha Call</h3>
+              <Clock className="h-6 w-6 text-[#F35E4A] mr-3" />
+              <h3 className="text-xl font-bold text-gray-900">Your Next Aasha Call</h3>
             </div>
-            <p className="text-lg opacity-90 mb-2">Preferred Time: {getCallTimeDisplay()}</p>
-            <p className="text-base opacity-75">Aasha will call you during your preferred time window</p>
+            <p className="text-base text-gray-700 mb-2">Preferred Time: {getCallTimeDisplay()}</p>
+            <p className="text-sm text-gray-600">Aasha will call you during your preferred time window</p>
           </div>
           <button
             onClick={() => onNavigate('call-schedule')}
-            className="bg-white text-[#F35E4A] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+            className="bg-[#F35E4A] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#e54d37] transition-all"
           >
             Update Schedule
           </button>
