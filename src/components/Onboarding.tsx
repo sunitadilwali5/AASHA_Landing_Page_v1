@@ -194,12 +194,23 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-[#F4F2EE] rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
-        >
-          <X className="h-6 w-6" />
-        </button>
+        {currentStep > 0 && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-20 bg-white rounded-full p-2 shadow-md"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+
+        {currentStep === 0 && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        )}
 
         {currentStep > 0 && (
           <div className="sticky top-0 bg-[#F4F2EE] pt-8 pb-4 px-8 z-10">
