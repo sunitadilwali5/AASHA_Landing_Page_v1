@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../Onboarding';
+import { checkPhoneNumberExists } from '../../services/onboardingService';
 
 interface PhoneStepProps {
   data: OnboardingData;
@@ -11,6 +12,8 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
   const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [showLoginOption, setShowLoginOption] = useState(false);
 
   const validatePhoneNumber = (phone: string, countryCode: string): boolean => {
     const digitsOnly = phone.replace(/\D/g, '');
@@ -28,7 +31,7 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
     setError('');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!phoneNumber) {
       setError('Phone number is required');
       return;
@@ -45,8 +48,37 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
       setError('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
-    updateData({ phoneNumber });
-    onNext();
+
+    try {
+      setChecking(true);
+      setError('');
+      setShowLoginOption(false);
+
+      const exists = await checkPhoneNumberExists(phoneNumber, data.countryCode);
+
+      if (exists) {
+        setError('This phone number is already registered.');
+        setShowLoginOption(true);
+        setChecking(false);
+        return;
+      }
+
+      updateData({ phoneNumber });
+      onNext();
+    } catch (err) {
+      console.error('Error checking phone number:', err);
+      setError('Failed to verify phone number. Please try again.');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleLoginClick = () => {
+    window.location.href = '/';
+    setTimeout(() => {
+      const loginButton = document.querySelector('[data-login-button]') as HTMLElement;
+      if (loginButton) loginButton.click();
+    }, 100);
   };
 
   return (
@@ -84,7 +116,17 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
         </div>
 
         {error && (
-          <p className="text-red-500 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600 text-sm font-medium">{error}</p>
+            {showLoginOption && (
+              <button
+                onClick={handleLoginClick}
+                className="mt-3 text-[#F35E4A] hover:underline font-semibold text-sm"
+              >
+                Click here to log in instead
+              </button>
+            )}
+          </div>
         )}
 
         <div className="flex items-start space-x-3 mt-8">
@@ -109,10 +151,10 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
 
         <button
           onClick={handleSubmit}
-          disabled={!phoneNumber || !agreed}
+          disabled={!phoneNumber || !agreed || checking}
           className="w-full bg-[#F35E4A] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-8"
         >
-          Send OTP
+          {checking ? 'Checking...' : 'Send OTP'}
         </button>
       </div>
     </div>

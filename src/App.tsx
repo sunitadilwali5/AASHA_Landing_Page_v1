@@ -167,6 +167,7 @@ function App() {
             <div className="hidden md:flex items-center space-x-4">
               <button
                 onClick={() => setShowLogin(true)}
+                data-login-button
                 className="text-gray-700 hover:text-[#F35E4A] transition-colors font-semibold"
               >
                 Login

@@ -1,6 +1,27 @@
 import { supabase } from '../lib/supabase';
 import type { OnboardingData } from '../components/Onboarding';
 
+export async function checkPhoneNumberExists(phoneNumber: string, countryCode: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone_number', phoneNumber)
+      .eq('country_code', countryCode)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking phone number:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error checking phone number:', error);
+    return false;
+  }
+}
+
 export async function saveOnboardingData(data: OnboardingData) {
   try {
     if (data.registrationType === 'myself') {
@@ -33,6 +54,9 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
+    if (signUpError.message.includes('already registered')) {
+      throw new Error('User already registered');
+    }
     throw new Error(`Failed to create account: ${signUpError.message}`);
   }
   if (!authData.user) throw new Error('User creation failed');
@@ -140,6 +164,9 @@ async function saveLovedOneRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
+    if (signUpError.message.includes('already registered')) {
+      throw new Error('User already registered');
+    }
     throw new Error(`Failed to create account: ${signUpError.message}`);
   }
   if (!authData.user) throw new Error('User creation failed');
