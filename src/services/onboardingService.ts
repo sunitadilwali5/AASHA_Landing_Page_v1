@@ -102,7 +102,25 @@ async function saveMyselfRegistration(data: OnboardingData) {
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
 
-  return { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
+  const result = { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
+
+  await sendWebhook({
+    ...result,
+    registrationType: 'myself',
+    phoneNumber: data.phoneNumber,
+    countryCode: data.countryCode,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    language: data.language,
+    maritalStatus: data.maritalStatus,
+    callTimePreference: callTimePreference,
+    medications: data.medications,
+    interests: data.interests,
+  });
+
+  return result;
 }
 
 async function saveLovedOneRegistration(data: OnboardingData) {
@@ -191,7 +209,36 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
 
-  return { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
+  const result = { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
+
+  await sendWebhook({
+    ...result,
+    registrationType: 'loved-one',
+    phoneNumber: data.phoneNumber,
+    countryCode: data.countryCode,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    language: data.language,
+    maritalStatus: data.maritalStatus,
+    callTimePreference: callTimePreference,
+    medications: data.medications,
+    interests: data.interests,
+    lovedOne: {
+      phoneNumber: data.lovedOnePhoneNumber!,
+      countryCode: data.lovedOneCountryCode!,
+      firstName: data.lovedOneFirstName!,
+      lastName: data.lovedOneLastName!,
+      dateOfBirth: data.lovedOneDateOfBirth!,
+      gender: data.lovedOneGender!,
+      language: data.lovedOneLanguage!,
+      maritalStatus: data.lovedOneMaritalStatus!,
+      relationship: data.relationship!,
+    },
+  });
+
+  return result;
 }
 
 async function saveMedications(elderlyProfileId: string, medications: OnboardingData['medications']) {
@@ -253,4 +300,25 @@ function mapCallTimeToPreference(
 
 function generateTemporaryPassword(): string {
   return Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
+}
+
+async function sendWebhook(data: any) {
+  try {
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-registration-webhook`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      console.error('Webhook call failed:', await response.text());
+    }
+  } catch (error) {
+    console.error('Error sending webhook:', error);
+  }
 }
