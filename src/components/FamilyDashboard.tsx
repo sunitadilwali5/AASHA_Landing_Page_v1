@@ -218,16 +218,6 @@ const FamilyDashboard: React.FC = () => {
               })}
             </ul>
           </nav>
-
-          <div className="p-4 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all"
-            >
-              <LogOut className="h-6 w-6 mr-3" />
-              <span className="text-base font-medium">Logout</span>
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -243,7 +233,13 @@ const FamilyDashboard: React.FC = () => {
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
               {menuItems.find((item) => item.id === currentSection)?.label || 'Family Dashboard'}
             </h1>
-            <div className="h-6 w-6"></div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all text-sm font-medium"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
           </div>
         </header>
 
