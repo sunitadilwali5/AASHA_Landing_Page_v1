@@ -88,9 +88,17 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
-    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered') || signUpError.message.includes('User already registered')) {
       try {
-        await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        const cleanupResult = await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        console.log('Cleanup result:', cleanupResult);
+
+        if (cleanupResult.hasProfile) {
+          throw new Error('This phone number is already registered with a complete profile. Please use a different number.');
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         const retryAuth = await supabase.auth.signUp({
           email,
           password,
@@ -103,9 +111,10 @@ async function saveMyselfRegistration(data: OnboardingData) {
         });
 
         if (retryAuth.error) {
-          throw new Error('Failed to create account after cleanup');
+          console.error('Retry signup error:', retryAuth.error);
+          throw new Error(`Failed to create account after cleanup: ${retryAuth.error.message}`);
         }
-        if (!retryAuth.data.user) throw new Error('User creation failed');
+        if (!retryAuth.data.user) throw new Error('User creation failed after cleanup');
         userId = retryAuth.data.user.id;
 
         if (!retryAuth.data.session) {
@@ -117,9 +126,9 @@ async function saveMyselfRegistration(data: OnboardingData) {
             throw new Error(`Failed to authenticate: ${signInError.message}`);
           }
         }
-      } catch (cleanupError) {
+      } catch (cleanupError: any) {
         console.error('Cleanup error:', cleanupError);
-        throw new Error('This phone number has a partial registration. Please try again in a few moments.');
+        throw new Error(cleanupError.message || 'This phone number has a partial registration. Please try again in a few moments.');
       }
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
@@ -282,9 +291,17 @@ async function saveLovedOneRegistration(data: OnboardingData) {
 
   if (signUpError) {
     console.error('Signup error:', signUpError);
-    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+    if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered') || signUpError.message.includes('User already registered')) {
       try {
-        await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        const cleanupResult = await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        console.log('Cleanup result:', cleanupResult);
+
+        if (cleanupResult.hasProfile) {
+          throw new Error('This phone number is already registered with a complete profile. Please use a different number.');
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         const retryAuth = await supabase.auth.signUp({
           email,
           password,
@@ -297,9 +314,10 @@ async function saveLovedOneRegistration(data: OnboardingData) {
         });
 
         if (retryAuth.error) {
-          throw new Error('Failed to create account after cleanup');
+          console.error('Retry signup error:', retryAuth.error);
+          throw new Error(`Failed to create account after cleanup: ${retryAuth.error.message}`);
         }
-        if (!retryAuth.data.user) throw new Error('User creation failed');
+        if (!retryAuth.data.user) throw new Error('User creation failed after cleanup');
         caregiverId = retryAuth.data.user.id;
 
         if (!retryAuth.data.session) {
@@ -311,9 +329,9 @@ async function saveLovedOneRegistration(data: OnboardingData) {
             throw new Error(`Failed to authenticate: ${signInError.message}`);
           }
         }
-      } catch (cleanupError) {
+      } catch (cleanupError: any) {
         console.error('Cleanup error:', cleanupError);
-        throw new Error('This phone number has a partial registration. Please try again in a few moments.');
+        throw new Error(cleanupError.message || 'This phone number has a partial registration. Please try again in a few moments.');
       }
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
@@ -481,7 +499,7 @@ function generateTemporaryPassword(phoneNumber: string): string {
   return `aasha_${Math.abs(hash)}_${phoneNumber.slice(-4)}_temp_pw_2025`;
 }
 
-async function cleanupOrphanedAuth(phoneNumber: string, countryCode: string) {
+async function cleanupOrphanedAuth(phoneNumber: string, countryCode: string): Promise<{ success: boolean; hasProfile?: boolean; cleaned?: boolean; message?: string }> {
   try {
     const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-orphaned-auth`;
 
@@ -494,17 +512,18 @@ async function cleanupOrphanedAuth(phoneNumber: string, countryCode: string) {
       body: JSON.stringify({ phoneNumber, countryCode }),
     });
 
-    if (!response.ok) {
-      console.error('Cleanup function failed:', await response.text());
-      throw new Error('Failed to cleanup orphaned auth user');
-    }
-
     const result = await response.json();
     console.log('Cleanup result:', result);
+
+    if (!response.ok) {
+      console.error('Cleanup function failed:', result);
+      throw new Error(result.details || result.error || 'Failed to cleanup orphaned auth user');
+    }
+
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error calling cleanup function:', error);
-    throw error;
+    throw new Error(error.message || 'Failed to cleanup orphaned auth user');
   }
 }
 
@@ -522,9 +541,12 @@ async function sendWebhook(data: any) {
     });
 
     if (!response.ok) {
-      console.error('Webhook call failed:', await response.text());
+      const errorText = await response.text();
+      console.warn('Webhook call failed (non-blocking):', errorText);
+    } else {
+      console.log('Webhook sent successfully');
     }
   } catch (error) {
-    console.error('Error sending webhook:', error);
+    console.warn('Error sending webhook (non-blocking):', error);
   }
 }
