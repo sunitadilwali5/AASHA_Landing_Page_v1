@@ -18,6 +18,7 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
         setSaving(true);
         setError(null);
         await saveOnboardingData(data);
+        await new Promise(resolve => setTimeout(resolve, 1500));
         setSaving(false);
       } catch (err: any) {
         console.error('Failed to save onboarding data:', err);
@@ -67,6 +68,9 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
       </div>
     );
   }
+  const isElderlyUser = data.registrationType === 'myself';
+  const lovedOneName = data.lovedOneFirstName || 'your loved one';
+
   return (
     <div className="max-w-3xl mx-auto text-center py-12">
       <div className="mb-8 flex justify-center">
@@ -76,58 +80,76 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
       </div>
 
       <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-        Thank You for Registering!
+        {isElderlyUser ? 'Welcome to Aasha!' : 'Registration Complete!'}
       </h2>
       <p className="text-xl text-gray-600 mb-12">
-        Welcome to Aasha, {data.firstName}! We're excited to be your companion.
+        {isElderlyUser
+          ? `Thank you for registering, ${data.firstName}! We're excited to be your companion.`
+          : `Thank you, ${data.firstName}! You've successfully set up Aasha for ${lovedOneName}.`
+        }
       </p>
 
-      <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 mb-8 text-left">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">What happens next?</h3>
-        <div className="space-y-6">
-          <div className="flex items-start space-x-4">
-            <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
-              <Phone className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">
-                Aasha will call you soon
-              </h4>
-              <p className="text-gray-600">
-                Based on your preference, you'll receive your first call during {data.callTime === 'morning' ? '8AM - 12PM' : data.callTime === 'afternoon' ? '12PM - 5PM' : '5PM - 9PM'}.
-              </p>
-            </div>
+      {isElderlyUser ? (
+        <div className="bg-gradient-to-br from-[#F35E4A] to-[#e54d37] rounded-2xl p-8 mb-8 text-white">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <Phone className="h-8 w-8" />
+            <h3 className="text-2xl font-bold">Aasha is calling you now!</h3>
           </div>
+          <p className="text-lg text-white/90 mb-2">
+            Your first conversation will begin within the next minute.
+          </p>
+          <p className="text-white/80">
+            Please keep your phone nearby and answer when Aasha calls.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 mb-8 text-left">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">What happens next?</h3>
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
+                <Phone className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  Aasha will call {lovedOneName}
+                </h4>
+                <p className="text-gray-600">
+                  Based on the preferences you set, {lovedOneName} will receive calls during their preferred time.
+                </p>
+              </div>
+            </div>
 
-          <div className="flex items-start space-x-4">
-            <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
-              <Mail className="h-5 w-5 text-white" />
+            <div className="flex items-start space-x-4">
+              <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  Access your family dashboard
+                </h4>
+                <p className="text-gray-600">
+                  Monitor conversations, manage medications, share content, and stay connected with {lovedOneName}.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">
-                Check your email
-              </h4>
-              <p className="text-gray-600">
-                We've sent you a confirmation email with details about your account and how to get started.
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-start space-x-4">
-            <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
-              <CheckCircle className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">
-                Access your dashboard
-              </h4>
-              <p className="text-gray-600">
-                Log in anytime to view conversation history, manage medications, and update your preferences.
-              </p>
+            <div className="flex items-start space-x-4">
+              <div className="bg-[#F35E4A] rounded-full p-2 mt-1">
+                <Bell className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">
+                  Receive alerts and updates
+                </h4>
+                <p className="text-gray-600">
+                  Get notified about important moments and insights from conversations.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="bg-[#F35E4A]/10 rounded-2xl p-6 mb-8">
         <p className="text-gray-700">
@@ -146,7 +168,7 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
         onClick={() => window.location.reload()}
         className="bg-[#F35E4A] text-white px-12 py-4 rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all shadow-lg"
       >
-        Go to Dashboard
+        Go to Your Dashboard
       </button>
     </div>
   );

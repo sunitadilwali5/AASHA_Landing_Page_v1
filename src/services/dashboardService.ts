@@ -15,6 +15,21 @@ export async function getElderlyProfileForUser() {
     throw new Error('User not authenticated');
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error('Error checking profile:', profileError);
+    throw profileError;
+  }
+
+  if (!profile) {
+    throw new Error('Profile not found. Please complete registration.');
+  }
+
   const { data, error } = await supabase
     .from('elderly_profiles')
     .select('*')
