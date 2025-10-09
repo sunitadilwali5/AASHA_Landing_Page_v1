@@ -12,6 +12,10 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
   const [formData, setFormData] = useState({
     firstName: data.firstName,
     lastName: data.lastName,
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    language: data.language,
+    maritalStatus: data.maritalStatus,
     relationship: data.relationship || '',
   });
 
@@ -20,7 +24,15 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
   };
 
   const handleSubmit = () => {
-    if (formData.firstName && formData.lastName && formData.relationship) {
+    if (
+      formData.firstName &&
+      formData.lastName &&
+      formData.dateOfBirth &&
+      formData.gender &&
+      formData.language &&
+      formData.maritalStatus &&
+      formData.relationship
+    ) {
       updateData(formData);
       onNext();
     }
@@ -54,6 +66,57 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
               placeholder="Test"
               className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A]"
             />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Date of birth</label>
+            <input
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+              className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Gender</label>
+            <select
+              value={formData.gender}
+              onChange={(e) => handleChange('gender', e.target.value)}
+              className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] bg-white"
+            >
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Language</label>
+            <select
+              value={formData.language}
+              onChange={(e) => handleChange('language', e.target.value)}
+              className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] bg-white"
+            >
+              <option value="English">English</option>
+              <option value="Hindi">Hindi</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Marital status</label>
+            <select
+              value={formData.maritalStatus}
+              onChange={(e) => handleChange('maritalStatus', e.target.value)}
+              className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A] bg-white"
+            >
+              <option value="">Select</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Widowed">Widowed</option>
+              <option value="Divorced">Divorced</option>
+            </select>
           </div>
         </div>
 
@@ -89,7 +152,14 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
         </button>
         <button
           onClick={handleSubmit}
-          disabled={!formData.firstName || !formData.lastName || !formData.relationship}
+          disabled={
+            !formData.firstName ||
+            !formData.lastName ||
+            !formData.dateOfBirth ||
+            !formData.gender ||
+            !formData.maritalStatus ||
+            !formData.relationship
+          }
           className="px-8 py-3 bg-[#F35E4A] text-white rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue

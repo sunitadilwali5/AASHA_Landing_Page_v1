@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { OnboardingData } from '../components/Onboarding';
+import { validateDate, sanitizeDate, validateOnboardingData } from '../utils/validation';
 
 export async function checkPhoneNumberExists(phoneNumber: string, countryCode: string): Promise<boolean> {
   try {
@@ -38,6 +39,25 @@ export async function saveOnboardingData(data: OnboardingData) {
 }
 
 async function saveMyselfRegistration(data: OnboardingData) {
+  const validationErrors = validateOnboardingData({
+    firstName: data.firstName,
+    lastName: data.lastName,
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    language: data.language,
+    maritalStatus: data.maritalStatus,
+  });
+
+  if (validationErrors.length > 0) {
+    const errorMessage = validationErrors.map(e => e.message).join(', ');
+    throw new Error(`Validation failed: ${errorMessage}`);
+  }
+
+  const sanitizedDateOfBirth = sanitizeDate(data.dateOfBirth);
+  if (!sanitizedDateOfBirth) {
+    throw new Error('Invalid date of birth format. Please use a valid date.');
+  }
+
   const email = `${data.phoneNumber}@aasha-temp.com`;
   const password = generateTemporaryPassword(data.phoneNumber);
 
@@ -129,7 +149,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
       country_code: data.countryCode,
       first_name: data.firstName,
       last_name: data.lastName,
-      date_of_birth: data.dateOfBirth,
+      date_of_birth: sanitizedDateOfBirth,
       gender: data.gender,
       language: data.language,
       marital_status: data.maritalStatus,
@@ -154,7 +174,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
       country_code: data.countryCode,
       first_name: data.firstName,
       last_name: data.lastName,
-      date_of_birth: data.dateOfBirth,
+      date_of_birth: sanitizedDateOfBirth,
       gender: data.gender,
       language: data.language,
       marital_status: data.maritalStatus,
@@ -194,6 +214,45 @@ async function saveMyselfRegistration(data: OnboardingData) {
 }
 
 async function saveLovedOneRegistration(data: OnboardingData) {
+  const caregiverValidationErrors = validateOnboardingData({
+    firstName: data.firstName,
+    lastName: data.lastName,
+    dateOfBirth: data.dateOfBirth,
+    gender: data.gender,
+    language: data.language,
+    maritalStatus: data.maritalStatus,
+  });
+
+  if (caregiverValidationErrors.length > 0) {
+    const errorMessage = caregiverValidationErrors.map(e => e.message).join(', ');
+    throw new Error(`Caregiver validation failed: ${errorMessage}`);
+  }
+
+  const lovedOneValidationErrors = validateOnboardingData({
+    firstName: data.lovedOneFirstName,
+    lastName: data.lovedOneLastName,
+    dateOfBirth: data.lovedOneDateOfBirth,
+    gender: data.lovedOneGender,
+    language: data.lovedOneLanguage,
+    maritalStatus: data.lovedOneMaritalStatus,
+  });
+
+  if (lovedOneValidationErrors.length > 0) {
+    const errorMessage = lovedOneValidationErrors.map(e => e.message).join(', ');
+    throw new Error(`Loved one validation failed: ${errorMessage}`);
+  }
+
+  const sanitizedCaregiverDOB = sanitizeDate(data.dateOfBirth);
+  const sanitizedLovedOneDOB = sanitizeDate(data.lovedOneDateOfBirth);
+
+  if (!sanitizedCaregiverDOB) {
+    throw new Error('Invalid caregiver date of birth format. Please use a valid date.');
+  }
+
+  if (!sanitizedLovedOneDOB) {
+    throw new Error('Invalid loved one date of birth format. Please use a valid date.');
+  }
+
   const email = `${data.phoneNumber}@aasha-temp.com`;
   const password = generateTemporaryPassword(data.phoneNumber);
 
@@ -284,7 +343,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
       country_code: data.countryCode,
       first_name: data.firstName,
       last_name: data.lastName,
-      date_of_birth: data.dateOfBirth,
+      date_of_birth: sanitizedCaregiverDOB,
       gender: data.gender,
       language: data.language,
       marital_status: data.maritalStatus,
@@ -309,7 +368,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
       country_code: data.lovedOneCountryCode!,
       first_name: data.lovedOneFirstName!,
       last_name: data.lovedOneLastName!,
-      date_of_birth: data.lovedOneDateOfBirth!,
+      date_of_birth: sanitizedLovedOneDOB,
       gender: data.lovedOneGender!,
       language: data.lovedOneLanguage!,
       marital_status: data.lovedOneMaritalStatus!,

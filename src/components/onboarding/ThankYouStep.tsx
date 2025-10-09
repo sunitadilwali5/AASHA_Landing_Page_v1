@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, Phone, Mail, Loader2 } from 'lucide-react';
+import { CheckCircle, Phone, Mail, Loader2, Bell } from 'lucide-react';
 import { OnboardingData } from '../Onboarding';
 import { saveOnboardingData } from '../../services/onboardingService';
 
@@ -22,7 +22,20 @@ const ThankYouStep: React.FC<ThankYouStepProps> = ({ data, onClose }) => {
         setSaving(false);
       } catch (err: any) {
         console.error('Failed to save onboarding data:', err);
-        const errorMessage = err?.message || 'Failed to save your information. Please try again.';
+        let errorMessage = 'Failed to save your information. Please try again.';
+
+        if (err?.message) {
+          if (err.message.includes('date')) {
+            errorMessage = 'There was an issue with the date of birth information. Please go back and ensure all dates are entered correctly.';
+          } else if (err.message.includes('validation')) {
+            errorMessage = 'Some required information is missing or invalid. Please review your entries and try again.';
+          } else if (err.message.includes('already registered')) {
+            errorMessage = 'This phone number is already registered. Please use a different number or contact support.';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+
         setError(errorMessage);
         setSaving(false);
       }
