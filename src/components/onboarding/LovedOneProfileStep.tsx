@@ -36,12 +36,22 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
     const numericValue = value.replace(/\D/g, '');
 
     let limitedValue = numericValue;
-    if (part === 'month' && numericValue.length > 2) {
+    if (part === 'month') {
       limitedValue = numericValue.slice(0, 2);
-    } else if (part === 'day' && numericValue.length > 2) {
+      const monthNum = parseInt(limitedValue);
+      if (monthNum > 12) limitedValue = '12';
+      if (monthNum < 1 && limitedValue.length === 2) limitedValue = '01';
+    } else if (part === 'day') {
       limitedValue = numericValue.slice(0, 2);
-    } else if (part === 'year' && numericValue.length > 4) {
+      const dayNum = parseInt(limitedValue);
+      if (dayNum > 31) limitedValue = '31';
+      if (dayNum < 1 && limitedValue.length === 2) limitedValue = '01';
+    } else if (part === 'year') {
       limitedValue = numericValue.slice(0, 4);
+      const currentYear = new Date().getFullYear();
+      if (limitedValue.length === 4 && parseInt(limitedValue) > currentYear) {
+        limitedValue = currentYear.toString();
+      }
     }
 
     const newDateParts = { ...dateParts, [part]: limitedValue };
@@ -53,11 +63,15 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
 
       if (!validateDate(dateString)) {
         setDateError('Please enter a valid date');
+        setFormData(prev => ({ ...prev, lovedOneDateOfBirth: '' }));
       } else if (!isValidDateInPast(dateString)) {
         setDateError('Date of birth must be in the past');
+        setFormData(prev => ({ ...prev, lovedOneDateOfBirth: '' }));
       } else {
         setFormData(prev => ({ ...prev, lovedOneDateOfBirth: dateString }));
       }
+    } else {
+      setFormData(prev => ({ ...prev, lovedOneDateOfBirth: '' }));
     }
   };
 
@@ -120,9 +134,11 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
             <input
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="MM"
               value={dateParts.month}
               onChange={(e) => handleDatePartChange('month', e.target.value)}
+              onPaste={(e) => e.preventDefault()}
               maxLength={2}
               className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
                 dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
@@ -132,9 +148,11 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
             <input
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="DD"
               value={dateParts.day}
               onChange={(e) => handleDatePartChange('day', e.target.value)}
+              onPaste={(e) => e.preventDefault()}
               maxLength={2}
               className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
                 dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
@@ -144,9 +162,11 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
             <input
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="YYYY"
               value={dateParts.year}
               onChange={(e) => handleDatePartChange('year', e.target.value)}
+              onPaste={(e) => e.preventDefault()}
               maxLength={4}
               className={`w-28 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
                 dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
