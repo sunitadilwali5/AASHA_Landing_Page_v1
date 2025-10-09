@@ -24,10 +24,19 @@ const ProfileStep: React.FC<ProfileStepProps> = ({ data, updateData, onNext, onB
   const handleChange = (field: string, value: string) => {
     if (field === 'dateOfBirth') {
       setDateError('');
-      if (value && !validateDate(value)) {
-        setDateError('Please enter a valid date');
-      } else if (value && !isValidDateInPast(value)) {
-        setDateError('Date of birth must be in the past');
+
+      if (value) {
+        const [year] = value.split('-');
+        if (year && year.length > 4) {
+          setDateError('Year must be 4 digits');
+          return;
+        }
+
+        if (!validateDate(value)) {
+          setDateError('Please enter a valid date');
+        } else if (!isValidDateInPast(value)) {
+          setDateError('Date of birth must be in the past');
+        }
       }
     }
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -92,7 +101,21 @@ const ProfileStep: React.FC<ProfileStepProps> = ({ data, updateData, onNext, onB
             type="date"
             value={formData.dateOfBirth}
             onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+            min="1900-01-01"
             max={new Date().toISOString().split('T')[0]}
+            onKeyDown={(e) => {
+              const input = e.currentTarget;
+              const value = input.value;
+              if (value) {
+                const [year] = value.split('-');
+                if (year && year.length >= 4 && e.key >= '0' && e.key <= '9' && !e.metaKey && !e.ctrlKey) {
+                  const selectionStart = input.selectionStart || 0;
+                  if (selectionStart < 4) {
+                    e.preventDefault();
+                  }
+                }
+              }
+            }}
             className={`w-full px-6 py-4 border-2 rounded-lg text-lg focus:outline-none ${
               dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
             }`}
