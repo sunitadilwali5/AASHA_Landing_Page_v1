@@ -20,26 +20,45 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
   });
 
   const [dateError, setDateError] = useState<string>('');
+  const [dateParts, setDateParts] = useState(() => {
+    if (data.lovedOneDateOfBirth) {
+      const [year, month, day] = data.lovedOneDateOfBirth.split('-');
+      return { month, day, year };
+    }
+    return { month: '', day: '', year: '' };
+  });
 
   const handleChange = (field: string, value: string) => {
-    if (field === 'lovedOneDateOfBirth') {
-      setDateError('');
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-      if (value) {
-        const [year] = value.split('-');
-        if (year && year.length > 4) {
-          setDateError('Year must be 4 digits');
-          return;
-        }
+  const handleDatePartChange = (part: 'month' | 'day' | 'year', value: string) => {
+    const numericValue = value.replace(/\D/g, '');
 
-        if (!validateDate(value)) {
-          setDateError('Please enter a valid date');
-        } else if (!isValidDateInPast(value)) {
-          setDateError('Date of birth must be in the past');
-        }
+    let limitedValue = numericValue;
+    if (part === 'month' && numericValue.length > 2) {
+      limitedValue = numericValue.slice(0, 2);
+    } else if (part === 'day' && numericValue.length > 2) {
+      limitedValue = numericValue.slice(0, 2);
+    } else if (part === 'year' && numericValue.length > 4) {
+      limitedValue = numericValue.slice(0, 4);
+    }
+
+    const newDateParts = { ...dateParts, [part]: limitedValue };
+    setDateParts(newDateParts);
+    setDateError('');
+
+    if (newDateParts.month && newDateParts.day && newDateParts.year.length === 4) {
+      const dateString = `${newDateParts.year}-${newDateParts.month.padStart(2, '0')}-${newDateParts.day.padStart(2, '0')}`;
+
+      if (!validateDate(dateString)) {
+        setDateError('Please enter a valid date');
+      } else if (!isValidDateInPast(dateString)) {
+        setDateError('Date of birth must be in the past');
+      } else {
+        setFormData(prev => ({ ...prev, lovedOneDateOfBirth: dateString }));
       }
     }
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
@@ -97,29 +116,43 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
 
         <div>
           <label className="block text-gray-700 font-medium mb-2">Date of birth</label>
-          <input
-            type="date"
-            value={formData.lovedOneDateOfBirth}
-            onChange={(e) => handleChange('lovedOneDateOfBirth', e.target.value)}
-            min="1900-01-01"
-            max={new Date().toISOString().split('T')[0]}
-            onKeyDown={(e) => {
-              const input = e.currentTarget;
-              const value = input.value;
-              if (value) {
-                const [year] = value.split('-');
-                if (year && year.length >= 4 && e.key >= '0' && e.key <= '9' && !e.metaKey && !e.ctrlKey) {
-                  const selectionStart = input.selectionStart || 0;
-                  if (selectionStart < 4) {
-                    e.preventDefault();
-                  }
-                }
-              }
-            }}
-            className={`w-full px-6 py-4 border-2 rounded-lg text-lg focus:outline-none ${
-              dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
-            }`}
-          />
+          <div className="flex gap-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="MM"
+              value={dateParts.month}
+              onChange={(e) => handleDatePartChange('month', e.target.value)}
+              maxLength={2}
+              className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+              }`}
+            />
+            <span className="text-2xl text-gray-400 self-center">/</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="DD"
+              value={dateParts.day}
+              onChange={(e) => handleDatePartChange('day', e.target.value)}
+              maxLength={2}
+              className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+              }`}
+            />
+            <span className="text-2xl text-gray-400 self-center">/</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="YYYY"
+              value={dateParts.year}
+              onChange={(e) => handleDatePartChange('year', e.target.value)}
+              maxLength={4}
+              className={`w-28 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+              }`}
+            />
+          </div>
           {dateError && (
             <p className="text-red-500 text-sm mt-1">{dateError}</p>
           )}
