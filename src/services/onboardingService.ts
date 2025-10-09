@@ -39,10 +39,21 @@ export async function saveOnboardingData(data: OnboardingData) {
 
 async function saveMyselfRegistration(data: OnboardingData) {
   const email = `${data.phoneNumber}@aasha-temp.com`;
-  const password = generateTemporaryPassword();
+  const password = generateTemporaryPassword(data.phoneNumber);
 
   let userId: string;
   let isExistingAuth = false;
+
+  const { data: existingProfile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('phone_number', data.phoneNumber)
+    .eq('country_code', data.countryCode)
+    .maybeSingle();
+
+  if (existingProfile) {
+    throw new Error('User already registered');
+  }
 
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
@@ -66,7 +77,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
       if (signInError) {
         console.error('Could not sign in with existing account:', signInError);
-        throw new Error('This phone number has an incomplete registration. Please contact support.');
+        throw new Error('This phone number has a partial registration. Attempting to complete it failed. Please try again or contact support if the issue persists.');
       }
 
       if (!signInData.user) {
@@ -74,16 +85,6 @@ async function saveMyselfRegistration(data: OnboardingData) {
       }
 
       userId = signInData.user.id;
-
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (existingProfile) {
-        throw new Error('User already registered');
-      }
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
     }
@@ -178,10 +179,21 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
 async function saveLovedOneRegistration(data: OnboardingData) {
   const email = `${data.phoneNumber}@aasha-temp.com`;
-  const password = generateTemporaryPassword();
+  const password = generateTemporaryPassword(data.phoneNumber);
 
   let caregiverId: string;
   let isExistingAuth = false;
+
+  const { data: existingProfile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('phone_number', data.phoneNumber)
+    .eq('country_code', data.countryCode)
+    .maybeSingle();
+
+  if (existingProfile) {
+    throw new Error('User already registered');
+  }
 
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email,
@@ -205,7 +217,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
 
       if (signInError) {
         console.error('Could not sign in with existing account:', signInError);
-        throw new Error('This phone number has an incomplete registration. Please contact support.');
+        throw new Error('This phone number has a partial registration. Attempting to complete it failed. Please try again or contact support if the issue persists.');
       }
 
       if (!signInData.user) {
@@ -213,16 +225,6 @@ async function saveLovedOneRegistration(data: OnboardingData) {
       }
 
       caregiverId = signInData.user.id;
-
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', caregiverId)
-        .maybeSingle();
-
-      if (existingProfile) {
-        throw new Error('User already registered');
-      }
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
     }
@@ -382,8 +384,11 @@ function mapCallTimeToPreference(
   return 'afternoon';
 }
 
-function generateTemporaryPassword(): string {
-  return Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
+function generateTemporaryPassword(phoneNumber: string): string {
+  const hash = phoneNumber.split('').reduce((acc, char) => {
+    return ((acc << 5) - acc) + char.charCodeAt(0);
+  }, 0);
+  return `aasha_${Math.abs(hash)}_${phoneNumber.slice(-4)}_temp_pw_2025`;
 }
 
 async function sendWebhook(data: any) {
