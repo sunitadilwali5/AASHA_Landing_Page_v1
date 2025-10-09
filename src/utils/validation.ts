@@ -8,19 +8,43 @@ export function validateDate(dateString: string | undefined | null): boolean {
     return false;
   }
 
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) {
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  if (year < 1900 || year > new Date().getFullYear()) {
     return false;
   }
 
-  const [year, month, day] = dateString.split('-').map(Number);
+  if (month < 1 || month > 12) {
+    return false;
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+
   const actualDate = new Date(year, month - 1, day);
+  if (isNaN(actualDate.getTime())) {
+    return false;
+  }
 
   return (
     actualDate.getFullYear() === year &&
     actualDate.getMonth() === month - 1 &&
     actualDate.getDate() === day
   );
+}
+
+export function isValidDateInPast(dateString: string): boolean {
+  if (!validateDate(dateString)) {
+    return false;
+  }
+
+  const inputDate = new Date(dateString);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return inputDate <= today;
 }
 
 export function sanitizeDate(dateString: string | undefined | null): string | null {

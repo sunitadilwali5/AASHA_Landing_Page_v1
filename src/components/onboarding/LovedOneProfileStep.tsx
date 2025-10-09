@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../Onboarding';
+import { validateDate, isValidDateInPast } from '../../utils/validation';
 
 interface LovedOneProfileStepProps {
   data: OnboardingData;
@@ -18,11 +19,31 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
     lovedOneMaritalStatus: data.lovedOneMaritalStatus || '',
   });
 
+  const [dateError, setDateError] = useState<string>('');
+
   const handleChange = (field: string, value: string) => {
+    if (field === 'lovedOneDateOfBirth') {
+      setDateError('');
+      if (value && !validateDate(value)) {
+        setDateError('Please enter a valid date');
+      } else if (value && !isValidDateInPast(value)) {
+        setDateError('Date of birth must be in the past');
+      }
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
+    if (!formData.lovedOneDateOfBirth || !validateDate(formData.lovedOneDateOfBirth)) {
+      setDateError('Please enter a valid date');
+      return;
+    }
+
+    if (!isValidDateInPast(formData.lovedOneDateOfBirth)) {
+      setDateError('Date of birth must be in the past');
+      return;
+    }
+
     if (
       formData.lovedOneFirstName &&
       formData.lovedOneLastName &&
@@ -71,8 +92,14 @@ const LovedOneProfileStep: React.FC<LovedOneProfileStepProps> = ({ data, updateD
             type="date"
             value={formData.lovedOneDateOfBirth}
             onChange={(e) => handleChange('lovedOneDateOfBirth', e.target.value)}
-            className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A]"
+            max={new Date().toISOString().split('T')[0]}
+            className={`w-full px-6 py-4 border-2 rounded-lg text-lg focus:outline-none ${
+              dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+            }`}
           />
+          {dateError && (
+            <p className="text-red-500 text-sm mt-1">{dateError}</p>
+          )}
         </div>
 
         <div>
