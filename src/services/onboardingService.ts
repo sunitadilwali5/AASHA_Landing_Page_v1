@@ -69,22 +69,38 @@ async function saveMyselfRegistration(data: OnboardingData) {
   if (signUpError) {
     console.error('Signup error:', signUpError);
     if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
-      isExistingAuth = true;
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: password,
-      });
+      try {
+        await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        const retryAuth = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: undefined,
+            data: {
+              phone: `${data.countryCode}${data.phoneNumber}`,
+            }
+          }
+        });
 
-      if (signInError) {
-        console.error('Could not sign in with existing account:', signInError);
-        throw new Error('This phone number has a partial registration. Attempting to complete it failed. Please try again or contact support if the issue persists.');
+        if (retryAuth.error) {
+          throw new Error('Failed to create account after cleanup');
+        }
+        if (!retryAuth.data.user) throw new Error('User creation failed');
+        userId = retryAuth.data.user.id;
+
+        if (!retryAuth.data.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) {
+            throw new Error(`Failed to authenticate: ${signInError.message}`);
+          }
+        }
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+        throw new Error('This phone number has a partial registration. Please try again in a few moments.');
       }
-
-      if (!signInData.user) {
-        throw new Error('Failed to retrieve existing user');
-      }
-
-      userId = signInData.user.id;
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
     }
@@ -182,7 +198,6 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   const password = generateTemporaryPassword(data.phoneNumber);
 
   let caregiverId: string;
-  let isExistingAuth = false;
 
   const { data: existingProfile } = await supabase
     .from('profiles')
@@ -209,22 +224,38 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   if (signUpError) {
     console.error('Signup error:', signUpError);
     if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
-      isExistingAuth = true;
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: password,
-      });
+      try {
+        await cleanupOrphanedAuth(data.phoneNumber, data.countryCode);
+        const retryAuth = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: undefined,
+            data: {
+              phone: `${data.countryCode}${data.phoneNumber}`,
+            }
+          }
+        });
 
-      if (signInError) {
-        console.error('Could not sign in with existing account:', signInError);
-        throw new Error('This phone number has a partial registration. Attempting to complete it failed. Please try again or contact support if the issue persists.');
+        if (retryAuth.error) {
+          throw new Error('Failed to create account after cleanup');
+        }
+        if (!retryAuth.data.user) throw new Error('User creation failed');
+        caregiverId = retryAuth.data.user.id;
+
+        if (!retryAuth.data.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (signInError) {
+            throw new Error(`Failed to authenticate: ${signInError.message}`);
+          }
+        }
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError);
+        throw new Error('This phone number has a partial registration. Please try again in a few moments.');
       }
-
-      if (!signInData.user) {
-        throw new Error('Failed to retrieve existing user');
-      }
-
-      caregiverId = signInData.user.id;
     } else {
       throw new Error(`Failed to create account: ${signUpError.message}`);
     }
@@ -389,6 +420,33 @@ function generateTemporaryPassword(phoneNumber: string): string {
     return ((acc << 5) - acc) + char.charCodeAt(0);
   }, 0);
   return `aasha_${Math.abs(hash)}_${phoneNumber.slice(-4)}_temp_pw_2025`;
+}
+
+async function cleanupOrphanedAuth(phoneNumber: string, countryCode: string) {
+  try {
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-orphaned-auth`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phoneNumber, countryCode }),
+    });
+
+    if (!response.ok) {
+      console.error('Cleanup function failed:', await response.text());
+      throw new Error('Failed to cleanup orphaned auth user');
+    }
+
+    const result = await response.json();
+    console.log('Cleanup result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error calling cleanup function:', error);
+    throw error;
+  }
 }
 
 async function sendWebhook(data: any) {
