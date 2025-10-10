@@ -209,11 +209,14 @@ async function saveMyselfRegistration(data: OnboardingData) {
 
   const result = { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
 
+  const toNumber = `${data.countryCode}${data.phoneNumber.replace(/\D/g, '')}`;
+
   await sendWebhook({
     ...result,
     registrationType: 'myself',
     phoneNumber: data.phoneNumber,
     countryCode: data.countryCode,
+    toNumber: toNumber,
     firstName: data.firstName,
     lastName: data.lastName,
     dateOfBirth: data.dateOfBirth,
@@ -401,6 +404,8 @@ async function saveLovedOneRegistration(data: OnboardingData) {
 
   const result = { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
 
+  const lovedOneToNumber = `${data.lovedOneCountryCode}${data.lovedOnePhoneNumber!.replace(/\D/g, '')}`;
+
   await sendWebhook({
     ...result,
     registrationType: 'loved-one',
@@ -415,6 +420,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     lovedOne: {
       phoneNumber: data.lovedOnePhoneNumber!,
       countryCode: data.lovedOneCountryCode!,
+      toNumber: lovedOneToNumber,
       firstName: data.lovedOneFirstName!,
       lastName: data.lovedOneLastName!,
       dateOfBirth: data.lovedOneDateOfBirth!,

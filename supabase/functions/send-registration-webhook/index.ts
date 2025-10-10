@@ -13,6 +13,7 @@ interface RegistrationData {
   registrationType: string;
   phoneNumber: string;
   countryCode: string;
+  toNumber?: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -30,6 +31,7 @@ interface RegistrationData {
   lovedOne?: {
     phoneNumber: string;
     countryCode: string;
+    toNumber: string;
     firstName: string;
     lastName: string;
     dateOfBirth: string;
