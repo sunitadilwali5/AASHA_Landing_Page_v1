@@ -14,6 +14,13 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
   const [phoneNumber, setPhoneNumber] = useState(data.lovedOnePhoneNumber || '');
   const [countryCode, setCountryCode] = useState(data.lovedOneCountryCode || '+1');
   const [useSameNumber, setUseSameNumber] = useState(false);
+
+  React.useEffect(() => {
+    if (useSameNumber) {
+      setCountryCode(data.countryCode);
+      setPhoneNumber(data.phoneNumber);
+    }
+  }, [useSameNumber, data.countryCode, data.phoneNumber]);
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
   const [showLoginOption, setShowLoginOption] = useState(false);
@@ -63,6 +70,7 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
       updateData({
         lovedOnePhoneNumber: data.phoneNumber,
         lovedOneCountryCode: data.countryCode,
+        lovedOnePhoneVerified: true,
       });
       onNext();
     } else {
@@ -99,6 +107,7 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
         updateData({
           lovedOnePhoneNumber: phoneNumber,
           lovedOneCountryCode: countryCode,
+          lovedOnePhoneVerified: false,
         });
         onNext();
       } catch (err) {
@@ -128,7 +137,9 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
         Where should Aasha call your loved one?
       </h2>
       <p className="text-gray-600 mb-8">
-        Aasha will call them on this number
+        {useSameNumber
+          ? 'Using your already verified phone number'
+          : 'Aasha will call them on this number'}
       </p>
 
       <div className="space-y-6">
@@ -159,9 +170,13 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
           <button
             onClick={handleSubmit}
             disabled={(!useSameNumber && !phoneNumber) || checking}
-            className="px-8 py-4 bg-gray-300 text-gray-600 rounded-lg text-lg font-semibold hover:bg-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-8 py-4 rounded-lg text-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+              useSameNumber
+                ? 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-gray-300 text-gray-600 hover:bg-gray-400'
+            }`}
           >
-            {checking ? 'Checking...' : 'Send OTP'}
+            {useSameNumber ? 'Verified ✓' : (checking ? 'Checking...' : 'Send OTP')}
           </button>
         </div>
 

@@ -38,6 +38,7 @@ export interface OnboardingData {
   lovedOnePhoneNumber?: string;
   lovedOneCountryCode?: string;
   lovedOneOtp?: string;
+  lovedOnePhoneVerified?: boolean;
   callTime: string;
   customTimeRange?: { start: string; end: string };
   medications: Array<{
@@ -96,7 +97,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose, onOpenLogin }) => {
     setCurrentStep(prev => prev - 1);
   };
 
-  const totalSteps = data.registrationType === 'loved-one' ? 9 : 8;
+  const getTotalSteps = () => {
+    if (data.registrationType === 'loved-one') {
+      return data.lovedOnePhoneVerified ? 8 : 9;
+    }
+    return 8;
+  };
+
+  const totalSteps = getTotalSteps();
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const renderStep = () => {
@@ -171,22 +179,38 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose, onOpenLogin }) => {
         return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 6:
         if (isLovedOne) {
-          return <LovedOneOTPStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          if (data.lovedOnePhoneVerified) {
+            return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          } else {
+            return <LovedOneOTPStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          }
         }
         return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 7:
         if (isLovedOne) {
-          return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          if (data.lovedOnePhoneVerified) {
+            return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          } else {
+            return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          }
         }
         return <ThankYouStep data={data} onClose={onClose} />;
       case 8:
         if (isLovedOne) {
-          return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          if (data.lovedOnePhoneVerified) {
+            return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          } else {
+            return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          }
         }
         return null;
       case 9:
         if (isLovedOne) {
-          return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          if (data.lovedOnePhoneVerified) {
+            return <ThankYouStep data={data} onClose={onClose} />;
+          } else {
+            return <InterestsStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          }
         }
         return null;
       case 10:
