@@ -15,6 +15,7 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext, onOpenL
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(false);
   const [showLoginOption, setShowLoginOption] = useState(false);
+  const [checkTimeout, setCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const validatePhoneNumber = (phone: string, countryCode: string): boolean => {
     const digitsOnly = phone.replace(/\D/g, '');
@@ -26,10 +27,33 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext, onOpenL
     return false;
   };
 
-  const handlePhoneChange = (value: string) => {
+  const handlePhoneChange = async (value: string) => {
     const digitsOnly = value.replace(/\D/g, '');
     setPhoneNumber(digitsOnly);
     setError('');
+    setShowLoginOption(false);
+
+    if (checkTimeout) {
+      clearTimeout(checkTimeout);
+    }
+
+    if (digitsOnly.length === 10 && validatePhoneNumber(digitsOnly, data.countryCode)) {
+      const timeout = setTimeout(async () => {
+        setChecking(true);
+        try {
+          const exists = await checkPhoneNumberExists(digitsOnly, data.countryCode);
+          if (exists) {
+            setError('This phone number is already registered. Please use a different number or contact support.');
+            setShowLoginOption(true);
+          }
+        } catch (err) {
+          console.error('Error checking phone number:', err);
+        } finally {
+          setChecking(false);
+        }
+      }, 800);
+      setCheckTimeout(timeout);
+    }
   };
 
   const handleSubmit = async () => {
@@ -50,15 +74,18 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext, onOpenL
       return;
     }
 
+    if (showLoginOption) {
+      return;
+    }
+
     try {
       setChecking(true);
       setError('');
-      setShowLoginOption(false);
 
       const exists = await checkPhoneNumberExists(phoneNumber, data.countryCode);
 
       if (exists) {
-        setError('This phone number is already registered.');
+        setError('This phone number is already registered. Please use a different number or contact support.');
         setShowLoginOption(true);
         setChecking(false);
         return;
@@ -122,10 +149,11 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext, onOpenL
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600 text-sm font-medium">{error}</p>
+            <p className="text-red-600 text-base">{error}</p>
             {showLoginOption && (
               <button
                 onClick={handleLoginClick}
+                type="button"
                 className="mt-3 text-[#F35E4A] hover:underline font-semibold text-sm"
               >
                 Click here to log in instead
