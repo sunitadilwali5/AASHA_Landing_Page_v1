@@ -8,6 +8,7 @@ import {
   Calendar,
   Settings,
   Home,
+  BarChart3,
   Menu,
   X,
   LogOut
@@ -22,8 +23,9 @@ import ConversationsSection from './dashboard/ConversationsSection';
 import InterestsSection from './dashboard/InterestsSection';
 import SpecialEventsSection from './dashboard/SpecialEventsSection';
 import SettingsSection from './dashboard/SettingsSection';
+import CallAnalyticsSection from './dashboard/CallAnalyticsSection';
 
-type Section = 'home' | 'profile' | 'medications' | 'call-schedule' | 'conversations' | 'interests' | 'events' | 'settings';
+type Section = 'home' | 'profile' | 'medications' | 'call-schedule' | 'conversations' | 'analytics' | 'interests' | 'events' | 'settings';
 
 interface ElderlyProfile {
   id: string;
@@ -73,6 +75,7 @@ const Dashboard: React.FC = () => {
     { id: 'medications', label: 'Medications', icon: Pill },
     { id: 'call-schedule', label: 'Call Schedule', icon: Clock },
     { id: 'conversations', label: 'Conversations', icon: MessageCircle },
+    { id: 'analytics', label: 'Call Analytics', icon: BarChart3 },
     { id: 'interests', label: 'My Interests', icon: Heart },
     { id: 'events', label: 'Special Events', icon: Calendar },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -97,6 +100,8 @@ const Dashboard: React.FC = () => {
         return <CallScheduleSection elderlyProfile={elderlyProfile} onUpdate={loadProfile} />;
       case 'conversations':
         return <ConversationsSection elderlyProfile={elderlyProfile} />;
+      case 'analytics':
+        return <CallAnalyticsSection elderlyProfile={elderlyProfile} />;
       case 'interests':
         return <InterestsSection elderlyProfile={elderlyProfile} />;
       case 'events':

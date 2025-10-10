@@ -4,7 +4,9 @@ import type { Database } from '../lib/supabase';
 type ElderlyProfile = Database['public']['Tables']['elderly_profiles']['Row'];
 type Medication = Database['public']['Tables']['medications']['Row'];
 type Interest = Database['public']['Tables']['interests']['Row'];
-type Conversation = Database['public']['Tables']['conversations']['Row'];
+type Call = Database['public']['Tables']['calls']['Row'];
+type CallAnalysis = Database['public']['Tables']['call_analysis']['Row'];
+type CallTranscript = Database['public']['Tables']['call_transcripts']['Row'];
 type SpecialEvent = Database['public']['Tables']['special_events']['Row'];
 type MedicationTracking = Database['public']['Tables']['medication_tracking']['Row'];
 
@@ -181,12 +183,16 @@ export async function trackMedicationTaken(medicationId: string, scheduledDateti
   return data;
 }
 
-export async function getConversations(elderlyProfileId: string, limit?: number) {
+export async function getCalls(elderlyProfileId: string, limit?: number) {
   let query = supabase
-    .from('conversations')
-    .select('*')
+    .from('calls')
+    .select(`
+      *,
+      call_analysis(*),
+      call_transcripts(*)
+    `)
     .eq('elderly_profile_id', elderlyProfileId)
-    .order('conversation_date', { ascending: false });
+    .order('started_at', { ascending: false });
 
   if (limit) {
     query = query.limit(limit);
@@ -195,22 +201,26 @@ export async function getConversations(elderlyProfileId: string, limit?: number)
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching conversations:', error);
+    console.error('Error fetching calls:', error);
     throw error;
   }
 
   return data || [];
 }
 
-export async function getConversation(conversationId: string) {
+export async function getCall(callId: string) {
   const { data, error } = await supabase
-    .from('conversations')
-    .select('*')
-    .eq('id', conversationId)
+    .from('calls')
+    .select(`
+      *,
+      call_analysis(*),
+      call_transcripts(*)
+    `)
+    .eq('id', callId)
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching conversation:', error);
+    console.error('Error fetching call:', error);
     throw error;
   }
 

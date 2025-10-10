@@ -10,7 +10,7 @@ import {
   Pill,
   Activity
 } from 'lucide-react';
-import { getMedications, getConversations, getSpecialEvents } from '../../services/dashboardService';
+import { getMedications, getCalls, getSpecialEvents } from '../../services/dashboardService';
 import { getFamilyAlerts, getMedicationAdherenceStats } from '../../services/familyDashboardService';
 
 interface FamilyDashboardHomeProps {
@@ -43,9 +43,9 @@ const FamilyDashboardHome: React.FC<FamilyDashboardHomeProps> = ({ elderlyProfil
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [medications, conversations, events, alerts, adherenceStats] = await Promise.all([
+      const [medications, calls, events, alerts, adherenceStats] = await Promise.all([
         getMedications(elderlyProfile.id),
-        getConversations(elderlyProfile.id, 5),
+        getCalls(elderlyProfile.id, 5),
         getSpecialEvents(elderlyProfile.id),
         getFamilyAlerts(elderlyProfile.id, true),
         getMedicationAdherenceStats(elderlyProfile.id, 30),
@@ -60,8 +60,8 @@ const FamilyDashboardHome: React.FC<FamilyDashboardHomeProps> = ({ elderlyProfil
         return eventDate >= today && eventDate <= nextWeek;
       });
 
-      if (conversations && conversations.length > 0) {
-        setLastConversationDate(conversations[0].conversation_date);
+      if (calls && calls.length > 0) {
+        setLastConversationDate(calls[0].started_at);
       }
 
       setRecentAlerts(alerts.slice(0, 3));
@@ -70,7 +70,7 @@ const FamilyDashboardHome: React.FC<FamilyDashboardHomeProps> = ({ elderlyProfil
       setStats({
         medicationCount: medications.length,
         upcomingEvents: upcoming.length,
-        recentConversations: conversations.length,
+        recentConversations: calls.length,
         medicationAdherence: adherenceStats.adherenceRate,
         unreadAlerts: alerts.length,
       });

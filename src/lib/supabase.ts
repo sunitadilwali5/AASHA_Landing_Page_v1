@@ -114,24 +114,156 @@ export interface Database {
           created_at?: string;
         };
       };
-      conversations: {
+      calls: {
         Row: {
           id: string;
+          retell_call_id: string;
           elderly_profile_id: string;
-          conversation_date: string;
-          duration_minutes: number;
-          summary: string;
-          full_transcript: string | null;
+          call_type: 'onboarding' | 'daily_checkin';
+          call_status: 'successful' | 'voicemail' | 'failed';
+          started_at: string;
+          ended_at: string | null;
+          duration_seconds: number;
+          agent_id: string | null;
+          access_token: string | null;
+          access_token_expires_at: string | null;
+          raw_webhook_data: Record<string, any>;
+          retell_webhook_received: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          retell_call_id: string;
+          elderly_profile_id: string;
+          call_type: 'onboarding' | 'daily_checkin';
+          call_status: 'successful' | 'voicemail' | 'failed';
+          started_at: string;
+          ended_at?: string | null;
+          duration_seconds?: number;
+          agent_id?: string | null;
+          access_token?: string | null;
+          access_token_expires_at?: string | null;
+          raw_webhook_data?: Record<string, any>;
+          retell_webhook_received?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          call_status?: 'successful' | 'voicemail' | 'failed';
+          ended_at?: string | null;
+          duration_seconds?: number;
+          agent_id?: string | null;
+          access_token?: string | null;
+          access_token_expires_at?: string | null;
+          raw_webhook_data?: Record<string, any>;
+          retell_webhook_received?: boolean;
+          updated_at?: string;
+        };
+      };
+      call_analysis: {
+        Row: {
+          id: string;
+          call_id: string;
+          call_summary: string;
+          user_sentiment: 'Positive' | 'Negative' | 'Neutral' | null;
+          call_successful: boolean;
+          in_voicemail: boolean;
+          medicine_taken: boolean | null;
+          custom_analysis_data: Record<string, any>;
           created_at: string;
         };
         Insert: {
           id?: string;
-          elderly_profile_id: string;
-          conversation_date?: string;
-          duration_minutes?: number;
-          summary?: string;
-          full_transcript?: string | null;
+          call_id: string;
+          call_summary?: string;
+          user_sentiment?: 'Positive' | 'Negative' | 'Neutral' | null;
+          call_successful?: boolean;
+          in_voicemail?: boolean;
+          medicine_taken?: boolean | null;
+          custom_analysis_data?: Record<string, any>;
           created_at?: string;
+        };
+        Update: {
+          call_summary?: string;
+          user_sentiment?: 'Positive' | 'Negative' | 'Neutral' | null;
+          call_successful?: boolean;
+          in_voicemail?: boolean;
+          medicine_taken?: boolean | null;
+          custom_analysis_data?: Record<string, any>;
+        };
+      };
+      call_transcripts: {
+        Row: {
+          id: string;
+          call_id: string;
+          transcript_text: string | null;
+          speaker_segments: Record<string, any>;
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          call_id: string;
+          transcript_text?: string | null;
+          speaker_segments?: Record<string, any>;
+          created_at?: string;
+          expires_at?: string;
+        };
+        Update: {
+          transcript_text?: string | null;
+          speaker_segments?: Record<string, any>;
+        };
+      };
+      call_costs: {
+        Row: {
+          id: string;
+          call_id: string;
+          combined_cost: number;
+          llm_tokens_used: number;
+          llm_average_tokens: number;
+          llm_num_requests: number;
+          llm_token_values: Record<string, any>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          call_id: string;
+          combined_cost?: number;
+          llm_tokens_used?: number;
+          llm_average_tokens?: number;
+          llm_num_requests?: number;
+          llm_token_values?: Record<string, any>;
+          created_at?: string;
+        };
+        Update: {
+          combined_cost?: number;
+          llm_tokens_used?: number;
+          llm_average_tokens?: number;
+          llm_num_requests?: number;
+          llm_token_values?: Record<string, any>;
+        };
+      };
+      daily_medicine_log: {
+        Row: {
+          id: string;
+          elderly_profile_id: string;
+          log_date: string;
+          medicine_taken: boolean;
+          call_id: string | null;
+          logged_at: string;
+        };
+        Insert: {
+          id?: string;
+          elderly_profile_id: string;
+          log_date: string;
+          medicine_taken: boolean;
+          call_id?: string | null;
+          logged_at?: string;
+        };
+        Update: {
+          medicine_taken?: boolean;
+          call_id?: string | null;
         };
       };
       special_events: {

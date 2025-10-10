@@ -8,7 +8,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { getMedications, getConversations, getSpecialEvents, getMedicationTracking } from '../../services/dashboardService';
+import { getMedications, getCalls, getSpecialEvents, getMedicationTracking } from '../../services/dashboardService';
 
 interface DashboardHomeProps {
   elderlyProfile: {
@@ -38,9 +38,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ elderlyProfile, onNavigat
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [medications, conversations, events] = await Promise.all([
+      const [medications, calls, events] = await Promise.all([
         getMedications(elderlyProfile.id),
-        getConversations(elderlyProfile.id, 5),
+        getCalls(elderlyProfile.id, 5),
         getSpecialEvents(elderlyProfile.id),
       ]);
 
@@ -58,7 +58,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ elderlyProfile, onNavigat
       setStats({
         medicationCount: medications.length,
         upcomingEvents: upcoming.length,
-        recentConversations: conversations.length,
+        recentConversations: calls.length,
         medicationAdherence: 85,
       });
     } catch (error) {
