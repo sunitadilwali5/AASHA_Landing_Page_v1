@@ -42,15 +42,15 @@ export async function processRetellWebhook(
   webhookData: RetellWebhookData
 ): Promise<{ callId: string; success: boolean; error?: string }> {
   try {
-    const existingCall = await supabase
+    const existingCallByRetellId = await supabase
       .from('calls')
       .select('id')
       .eq('retell_call_id', webhookData.call_id)
       .maybeSingle();
 
-    if (existingCall.data) {
+    if (existingCallByRetellId.data) {
       return {
-        callId: existingCall.data.id,
+        callId: existingCallByRetellId.data.id,
         success: true,
         error: 'Call already processed',
       };
@@ -64,27 +64,70 @@ export async function processRetellWebhook(
       ? webhookData.end_timestamp - webhookData.start_timestamp
       : 0;
 
-    const callData: CallInsert = {
-      retell_call_id: webhookData.call_id,
-      elderly_profile_id: elderlyProfileId,
-      call_type: webhookData.call_type,
-      call_status: webhookData.call_status,
-      started_at: startDate,
-      ended_at: endDate,
-      duration_seconds: durationSeconds,
-      agent_id: webhookData.agent_id || null,
-      raw_webhook_data: webhookData,
-      retell_webhook_received: true,
-    };
-
-    const { data: call, error: callError } = await supabase
+    const existingPrePopulatedCall = await supabase
       .from('calls')
-      .insert(callData)
-      .select()
-      .single();
+      .select('id')
+      .eq('elderly_profile_id', elderlyProfileId)
+      .is('retell_call_id', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let call;
+    let callError;
+
+    if (existingPrePopulatedCall.data) {
+      const updateResult = await supabase
+        .from('calls')
+        .update({
+          retell_call_id: webhookData.call_id,
+          call_type: webhookData.call_type,
+          call_status: webhookData.call_status,
+          ended_at: endDate,
+          duration_seconds: durationSeconds,
+          agent_id: webhookData.agent_id || null,
+          raw_webhook_data: webhookData,
+          retell_webhook_received: true,
+        })
+        .eq('id', existingPrePopulatedCall.data.id)
+        .select()
+        .single();
+
+      call = updateResult.data;
+      callError = updateResult.error;
+
+      if (!callError) {
+        console.log('Updated pre-populated call record with Retell data');
+      }
+    } else {
+      const callData: CallInsert = {
+        retell_call_id: webhookData.call_id,
+        elderly_profile_id: elderlyProfileId,
+        call_type: webhookData.call_type,
+        call_status: webhookData.call_status,
+        ended_at: endDate,
+        duration_seconds: durationSeconds,
+        agent_id: webhookData.agent_id || null,
+        raw_webhook_data: webhookData,
+        retell_webhook_received: true,
+      };
+
+      const insertResult = await supabase
+        .from('calls')
+        .insert(callData)
+        .select()
+        .single();
+
+      call = insertResult.data;
+      callError = insertResult.error;
+
+      if (!callError) {
+        console.log('Created new call record (no pre-populated record found)');
+      }
+    }
 
     if (callError) {
-      console.error('Error inserting call:', callError);
+      console.error('Error saving call:', callError);
       throw callError;
     }
 

@@ -207,6 +207,8 @@ async function saveMyselfRegistration(data: OnboardingData) {
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
 
+  await createInitialCallRecord(elderlyProfile.id);
+
   const result = { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
 
   const toNumber = `${data.countryCode}${data.phoneNumber.replace(/\D/g, '')}`;
@@ -402,6 +404,8 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
 
+  await createInitialCallRecord(elderlyProfile.id);
+
   const result = { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
 
   const lovedOneToNumber = `${data.lovedOneCountryCode}${data.lovedOnePhoneNumber!.replace(/\D/g, '')}`;
@@ -522,6 +526,24 @@ async function cleanupOrphanedAuth(phoneNumber: string, countryCode: string): Pr
   } catch (error: any) {
     console.error('Error calling cleanup function:', error);
     throw new Error(error.message || 'Failed to cleanup orphaned auth user');
+  }
+}
+
+async function createInitialCallRecord(elderlyProfileId: string) {
+  try {
+    const { error } = await supabase
+      .from('calls')
+      .insert({
+        elderly_profile_id: elderlyProfileId,
+      });
+
+    if (error) {
+      console.error('Error creating initial call record:', error);
+    } else {
+      console.log('Initial call record created successfully for elderly_profile_id:', elderlyProfileId);
+    }
+  } catch (error) {
+    console.warn('Error creating initial call record (non-blocking):', error);
   }
 }
 
