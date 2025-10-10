@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../Onboarding';
+import { validateDate, isValidDateInPast } from '../../utils/validation';
 
 interface FamilyProfileStepProps {
   data: OnboardingData;
@@ -19,11 +20,73 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
     relationship: data.relationship || '',
   });
 
+  const [dateError, setDateError] = useState<string>('');
+  const [dateParts, setDateParts] = useState(() => {
+    if (data.dateOfBirth) {
+      const [year, month, day] = data.dateOfBirth.split('-');
+      return { month, day, year };
+    }
+    return { month: '', day: '', year: '' };
+  });
+
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDatePartChange = (part: 'month' | 'day' | 'year', value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+
+    let limitedValue = numericValue;
+    if (part === 'month') {
+      limitedValue = numericValue.slice(0, 2);
+      const monthNum = parseInt(limitedValue);
+      if (monthNum > 12) limitedValue = '12';
+      if (monthNum < 1 && limitedValue.length === 2) limitedValue = '01';
+    } else if (part === 'day') {
+      limitedValue = numericValue.slice(0, 2);
+      const dayNum = parseInt(limitedValue);
+      if (dayNum > 31) limitedValue = '31';
+      if (dayNum < 1 && limitedValue.length === 2) limitedValue = '01';
+    } else if (part === 'year') {
+      limitedValue = numericValue.slice(0, 4);
+      const currentYear = new Date().getFullYear();
+      if (limitedValue.length === 4 && parseInt(limitedValue) > currentYear) {
+        limitedValue = currentYear.toString();
+      }
+    }
+
+    const newDateParts = { ...dateParts, [part]: limitedValue };
+    setDateParts(newDateParts);
+    setDateError('');
+
+    if (newDateParts.month && newDateParts.day && newDateParts.year.length === 4) {
+      const dateString = `${newDateParts.year}-${newDateParts.month.padStart(2, '0')}-${newDateParts.day.padStart(2, '0')}`;
+
+      if (!validateDate(dateString)) {
+        setDateError('Please enter a valid date');
+        setFormData(prev => ({ ...prev, dateOfBirth: '' }));
+      } else if (!isValidDateInPast(dateString)) {
+        setDateError('Date of birth must be in the past');
+        setFormData(prev => ({ ...prev, dateOfBirth: '' }));
+      } else {
+        setFormData(prev => ({ ...prev, dateOfBirth: dateString }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, dateOfBirth: '' }));
+    }
+  };
+
   const handleSubmit = () => {
+    if (!formData.dateOfBirth || !validateDate(formData.dateOfBirth)) {
+      setDateError('Please enter a valid date');
+      return;
+    }
+
+    if (!isValidDateInPast(formData.dateOfBirth)) {
+      setDateError('Date of birth must be in the past');
+      return;
+    }
+
     if (
       formData.firstName &&
       formData.lastName &&
@@ -70,12 +133,52 @@ const FamilyProfileStep: React.FC<FamilyProfileStepProps> = ({ data, updateData,
 
           <div>
             <label className="block text-gray-700 font-medium mb-2">Date of birth</label>
-            <input
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-              className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg text-lg focus:outline-none focus:border-[#F35E4A]"
-            />
+            <div className="flex gap-3">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="MM"
+                value={dateParts.month}
+                onChange={(e) => handleDatePartChange('month', e.target.value)}
+                onPaste={(e) => e.preventDefault()}
+                maxLength={2}
+                className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                  dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+                }`}
+              />
+              <span className="text-2xl text-gray-400 self-center">/</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="DD"
+                value={dateParts.day}
+                onChange={(e) => handleDatePartChange('day', e.target.value)}
+                onPaste={(e) => e.preventDefault()}
+                maxLength={2}
+                className={`w-20 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                  dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+                }`}
+              />
+              <span className="text-2xl text-gray-400 self-center">/</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="YYYY"
+                value={dateParts.year}
+                onChange={(e) => handleDatePartChange('year', e.target.value)}
+                onPaste={(e) => e.preventDefault()}
+                maxLength={4}
+                className={`w-28 px-4 py-4 border-2 rounded-lg text-lg text-center focus:outline-none ${
+                  dateError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#F35E4A]'
+                }`}
+              />
+            </div>
+            {dateError && (
+              <p className="text-red-500 text-sm mt-1">{dateError}</p>
+            )}
           </div>
 
           <div>
