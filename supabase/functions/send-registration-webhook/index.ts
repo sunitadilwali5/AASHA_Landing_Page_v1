@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
   try {
     const registrationData: RegistrationData = await req.json();
 
-    const webhookUrl = "https://baibhavparida2.app.n8n.cloud/webhook-test/Initiate_call";
+    const webhookUrl = "https://baibhavparida2.app.n8n.cloud/webhook/Initiate_call";
 
     const response = await fetch(webhookUrl, {
       method: "POST",
