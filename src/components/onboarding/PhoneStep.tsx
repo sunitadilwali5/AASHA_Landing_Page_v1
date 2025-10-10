@@ -6,9 +6,10 @@ interface PhoneStepProps {
   data: OnboardingData;
   updateData: (data: Partial<OnboardingData>) => void;
   onNext: () => void;
+  onOpenLogin?: () => void;
 }
 
-const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
+const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext, onOpenLogin }) => {
   const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
@@ -74,11 +75,15 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
   };
 
   const handleLoginClick = () => {
-    window.location.href = '/';
-    setTimeout(() => {
-      const loginButton = document.querySelector('[data-login-button]') as HTMLElement;
-      if (loginButton) loginButton.click();
-    }, 100);
+    if (onOpenLogin) {
+      onOpenLogin();
+    } else {
+      window.location.href = '/';
+      setTimeout(() => {
+        const loginButton = document.querySelector('[data-login-button]') as HTMLElement;
+        if (loginButton) loginButton.click();
+      }, 100);
+    }
   };
 
   return (
@@ -156,6 +161,16 @@ const PhoneStep: React.FC<PhoneStepProps> = ({ data, updateData, onNext }) => {
         >
           {checking ? 'Checking...' : 'Send OTP'}
         </button>
+
+        <div className="text-center mt-6">
+          <button
+            onClick={handleLoginClick}
+            type="button"
+            className="text-gray-600 hover:text-[#F35E4A] transition-colors text-sm"
+          >
+            Already Registered? <span className="font-semibold text-[#F35E4A]">Login here</span>
+          </button>
+        </div>
       </div>
     </div>
   );

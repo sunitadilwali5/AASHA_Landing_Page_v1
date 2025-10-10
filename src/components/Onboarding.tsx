@@ -14,6 +14,7 @@ import ThankYouStep from './onboarding/ThankYouStep';
 
 interface OnboardingProps {
   onClose: () => void;
+  onOpenLogin?: () => void;
 }
 
 export interface OnboardingData {
@@ -47,7 +48,15 @@ export interface OnboardingData {
   interests: string[];
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
+const Onboarding: React.FC<OnboardingProps> = ({ onClose, onOpenLogin }) => {
+  const handleOpenLogin = () => {
+    onClose();
+    setTimeout(() => {
+      if (onOpenLogin) {
+        onOpenLogin();
+      }
+    }, 100);
+  };
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [data, setData] = useState<OnboardingData>({
     registrationType: null,
@@ -142,7 +151,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
           </div>
         );
       case 1:
-        return <PhoneStep data={data} updateData={updateData} onNext={nextStep} />;
+        return <PhoneStep data={data} updateData={updateData} onNext={nextStep} onOpenLogin={handleOpenLogin} />;
       case 2:
         return <OTPStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 3:
@@ -157,7 +166,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onClose }) => {
         return <CallTimeStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 5:
         if (isLovedOne) {
-          return <LovedOnePhoneStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
+          return <LovedOnePhoneStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} onOpenLogin={handleOpenLogin} />;
         }
         return <MedicationStep data={data} updateData={updateData} onNext={nextStep} onBack={prevStep} />;
       case 6:

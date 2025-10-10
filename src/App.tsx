@@ -960,7 +960,10 @@ function App() {
       </footer>
 
       {showOnboarding && (
-        <Onboarding onClose={() => setShowOnboarding(false)} />
+        <Onboarding
+          onClose={() => setShowOnboarding(false)}
+          onOpenLogin={() => setShowLogin(true)}
+        />
       )}
 
       {showLogin && (

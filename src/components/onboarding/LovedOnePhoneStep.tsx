@@ -7,9 +7,10 @@ interface LovedOnePhoneStepProps {
   updateData: (data: Partial<OnboardingData>) => void;
   onNext: () => void;
   onBack: () => void;
+  onOpenLogin?: () => void;
 }
 
-const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData, onNext, onBack }) => {
+const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData, onNext, onBack, onOpenLogin }) => {
   const [phoneNumber, setPhoneNumber] = useState(data.lovedOnePhoneNumber || '');
   const [countryCode, setCountryCode] = useState(data.lovedOneCountryCode || '+1');
   const [useSameNumber, setUseSameNumber] = useState(false);
@@ -83,11 +84,15 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
   };
 
   const handleLoginClick = () => {
-    window.location.href = '/';
-    setTimeout(() => {
-      const loginButton = document.querySelector('[data-login-button]') as HTMLElement;
-      if (loginButton) loginButton.click();
-    }, 100);
+    if (onOpenLogin) {
+      onOpenLogin();
+    } else {
+      window.location.href = '/';
+      setTimeout(() => {
+        const loginButton = document.querySelector('[data-login-button]') as HTMLElement;
+        if (loginButton) loginButton.click();
+      }, 100);
+    }
   };
 
   return (
@@ -174,6 +179,16 @@ const LovedOnePhoneStep: React.FC<LovedOnePhoneStepProps> = ({ data, updateData,
           className="px-8 py-3 bg-[#F35E4A] text-white rounded-lg text-lg font-semibold hover:bg-[#e54d37] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {checking ? 'Checking...' : 'Continue'}
+        </button>
+      </div>
+
+      <div className="text-center mt-6">
+        <button
+          onClick={handleLoginClick}
+          type="button"
+          className="text-gray-600 hover:text-[#F35E4A] transition-colors text-sm"
+        >
+          Already Registered? <span className="font-semibold text-[#F35E4A]">Login here</span>
         </button>
       </div>
     </div>
