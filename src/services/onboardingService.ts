@@ -204,6 +204,15 @@ async function saveMyselfRegistration(data: OnboardingData) {
     throw new Error(`Failed to create elderly profile: ${elderlyError.message}`);
   }
 
+  const { error: profileUpdateError } = await supabase
+    .from('profiles')
+    .update({ elderly_profile_id: elderlyProfile.id })
+    .eq('id', userId);
+
+  if (profileUpdateError) {
+    console.error('Profile update error (elderly_profile_id):', profileUpdateError);
+  }
+
   await saveMedications(elderlyProfile.id, data.medications);
   await saveInterests(elderlyProfile.id, data.interests);
 
@@ -399,6 +408,15 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   if (elderlyError) {
     console.error('Elderly profile insert error (loved-one):', elderlyError);
     throw new Error(`Failed to create elderly profile: ${elderlyError.message}`);
+  }
+
+  const { error: profileUpdateError } = await supabase
+    .from('profiles')
+    .update({ elderly_profile_id: elderlyProfile.id })
+    .eq('id', caregiverId);
+
+  if (profileUpdateError) {
+    console.error('Profile update error (elderly_profile_id):', profileUpdateError);
   }
 
   await saveMedications(elderlyProfile.id, data.medications);
