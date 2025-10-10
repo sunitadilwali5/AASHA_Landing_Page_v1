@@ -4,19 +4,25 @@ import { validateDate, sanitizeDate, validateOnboardingData } from '../utils/val
 
 export async function checkPhoneNumberExists(phoneNumber: string, countryCode: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone_number', phoneNumber)
-      .eq('country_code', countryCode)
-      .maybeSingle();
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-phone-exists`;
 
-    if (error) {
-      console.error('Error checking phone number:', error);
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phoneNumber, countryCode }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Phone check API error:', errorData);
       return false;
     }
 
-    return !!data;
+    const result = await response.json();
+    return result.exists === true;
   } catch (error) {
     console.error('Error checking phone number:', error);
     return false;
