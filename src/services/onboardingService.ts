@@ -229,18 +229,12 @@ async function saveMyselfRegistration(data: OnboardingData) {
 }
 
 async function saveLovedOneRegistration(data: OnboardingData) {
-  const caregiverValidationErrors = validateOnboardingData({
-    firstName: data.firstName,
-    lastName: data.lastName,
-    dateOfBirth: data.dateOfBirth,
-    gender: data.gender,
-    language: data.language,
-    maritalStatus: data.maritalStatus,
-  });
+  if (!data.firstName || !data.lastName) {
+    throw new Error('First name and last name are required');
+  }
 
-  if (caregiverValidationErrors.length > 0) {
-    const errorMessage = caregiverValidationErrors.map(e => e.message).join(', ');
-    throw new Error(`Caregiver validation failed: ${errorMessage}`);
+  if (!data.relationship) {
+    throw new Error('Relationship with loved one is required');
   }
 
   const lovedOneValidationErrors = validateOnboardingData({
@@ -257,12 +251,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     throw new Error(`Loved one validation failed: ${errorMessage}`);
   }
 
-  const sanitizedCaregiverDOB = sanitizeDate(data.dateOfBirth);
   const sanitizedLovedOneDOB = sanitizeDate(data.lovedOneDateOfBirth);
-
-  if (!sanitizedCaregiverDOB) {
-    throw new Error('Invalid caregiver date of birth format. Please use a valid date.');
-  }
 
   if (!sanitizedLovedOneDOB) {
     throw new Error('Invalid loved one date of birth format. Please use a valid date.');
@@ -367,10 +356,10 @@ async function saveLovedOneRegistration(data: OnboardingData) {
       country_code: data.countryCode,
       first_name: data.firstName,
       last_name: data.lastName,
-      date_of_birth: sanitizedCaregiverDOB,
-      gender: data.gender,
-      language: data.language,
-      marital_status: data.maritalStatus,
+      date_of_birth: null,
+      gender: null,
+      language: data.language || 'English',
+      marital_status: null,
       registration_type: 'loved-one',
     })
     .select()
@@ -419,10 +408,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
     countryCode: data.countryCode,
     firstName: data.firstName,
     lastName: data.lastName,
-    dateOfBirth: data.dateOfBirth,
-    gender: data.gender,
-    language: data.language,
-    maritalStatus: data.maritalStatus,
+    relationship: data.relationship,
     callTimePreference: callTimePreference,
     medications: data.medications,
     interests: data.interests,

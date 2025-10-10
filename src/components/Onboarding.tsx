@@ -24,10 +24,10 @@ export interface OnboardingData {
   otp: string;
   firstName: string;
   lastName: string;
-  dateOfBirth: string;
-  gender: string;
-  language: string;
-  maritalStatus: string;
+  dateOfBirth?: string;
+  gender?: string;
+  language?: string;
+  maritalStatus?: string;
   relationship?: string;
   lovedOneFirstName?: string;
   lovedOneLastName?: string;
