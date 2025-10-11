@@ -179,6 +179,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
   }
 
   const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
+  const toNumber = `${data.countryCode}${data.phoneNumber.replace(/\D/g, '')}`;
 
   const { data: elderlyProfile, error: elderlyError } = await supabase
     .from('elderly_profiles')
@@ -187,6 +188,7 @@ async function saveMyselfRegistration(data: OnboardingData) {
       caregiver_profile_id: null,
       phone_number: data.phoneNumber,
       country_code: data.countryCode,
+      to_number: toNumber,
       first_name: data.firstName,
       last_name: data.lastName,
       date_of_birth: sanitizedDateOfBirth,
@@ -219,8 +221,6 @@ async function saveMyselfRegistration(data: OnboardingData) {
   await createInitialCallRecord(elderlyProfile.id);
 
   const result = { userId, profileId: profile.id, elderlyProfileId: elderlyProfile.id };
-
-  const toNumber = `${data.countryCode}${data.phoneNumber.replace(/\D/g, '')}`;
 
   await sendWebhook({
     ...result,
@@ -385,6 +385,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   }
 
   const callTimePreference = mapCallTimeToPreference(data.callTime, data.customTimeRange);
+  const lovedOneToNumber = `${data.lovedOneCountryCode}${data.lovedOnePhoneNumber!.replace(/\D/g, '')}`;
 
   const { data: elderlyProfile, error: elderlyError } = await supabase
     .from('elderly_profiles')
@@ -393,6 +394,7 @@ async function saveLovedOneRegistration(data: OnboardingData) {
       caregiver_profile_id: caregiverId,
       phone_number: data.lovedOnePhoneNumber!,
       country_code: data.lovedOneCountryCode!,
+      to_number: lovedOneToNumber,
       first_name: data.lovedOneFirstName!,
       last_name: data.lovedOneLastName!,
       date_of_birth: sanitizedLovedOneDOB,
@@ -425,8 +427,6 @@ async function saveLovedOneRegistration(data: OnboardingData) {
   await createInitialCallRecord(elderlyProfile.id);
 
   const result = { userId: caregiverId, profileId: caregiverProfile.id, elderlyProfileId: elderlyProfile.id };
-
-  const lovedOneToNumber = `${data.lovedOneCountryCode}${data.lovedOnePhoneNumber!.replace(/\D/g, '')}`;
 
   await sendWebhook({
     ...result,
