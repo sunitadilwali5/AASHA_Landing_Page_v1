@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
   try {
     const registrationData: RegistrationData = await req.json();
 
-    const webhookUrl = "https://sunitaai.app.n8n.cloud/webhook/a04af720-9bfa-4a95-bf92-5fdb47ad1857";
+    const webhookUrl = "https://sunitaai.app.n8n.cloud/webhook/on boarding trigger";
 
     const response = await fetch(webhookUrl, {
       method: "POST",
